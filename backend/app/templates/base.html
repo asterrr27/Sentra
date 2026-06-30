@@ -14,8 +14,8 @@
     <div class="container">
       <a class="navbar-brand" href="/">🛡️ Agent Action Auditor</a>
       <div class="navbar-nav ms-auto align-items-center gap-2">
-        <a class="nav-link" href="/">Dashboard</a>
-        <a class="nav-link" href="/payloads">Payloads</a>
+        <a class="nav-link" href="/">Dashboard <span class="kbd-hint">⌘D</span></a>
+        <a class="nav-link" href="/payloads">Payloads <span class="kbd-hint">⌘P</span></a>
         <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()" title="Toggle theme">☀️</button>
       </div>
     </div>
@@ -23,34 +23,37 @@
   <div class="container">
     {% block content %}{% endblock %}
   </div>
+
+  <div class="toast-container" id="toastContainer"></div>
+
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
   <script>
     const html = document.documentElement;
     const toggle = document.getElementById('themeToggle');
-
-    function getEffectiveTheme() {
-      return html.getAttribute('data-theme') || 'dark';
-    }
+    const saved = localStorage.getItem('aa-theme') || 'dark';
 
     function setTheme(theme) {
       html.setAttribute('data-theme', theme);
       localStorage.setItem('aa-theme', theme);
-      const isDark = theme === 'dark';
-      toggle.textContent = isDark ? '☀️' : '🌙';
+      if (toggle) toggle.textContent = theme === 'dark' ? '☀️' : '🌙';
     }
-
-    function toggleTheme() {
-      setTheme(getEffectiveTheme() === 'dark' ? 'light' : 'dark');
-      updateThemeColors();
-    }
-
-    function updateThemeColors() {
-      const isDark = getEffectiveTheme() === 'dark';
-      document.querySelector('meta[name="theme-color"]')?.setAttribute('content', isDark ? '#0a0e17' : '#ffffff');
-    }
-
-    const saved = localStorage.getItem('aa-theme') || 'dark';
+    function toggleTheme() { setTheme(html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark'); }
     setTheme(saved);
+
+    function showToast(message, icon) {
+      const c = document.getElementById('toastContainer');
+      const t = document.createElement('div');
+      t.className = 'toast-custom';
+      t.innerHTML = '<span class="toast-icon">' + (icon || '✅') + '</span><span>' + message + '</span><button class="toast-close" onclick="this.parentElement.remove()">✕</button>';
+      c.appendChild(t);
+      setTimeout(() => { if (t.parentElement) t.remove(); }, 3500);
+    }
+
+    document.addEventListener('keydown', function(e) {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'd') { e.preventDefault(); window.location.href = '/'; }
+      if ((e.metaKey || e.ctrlKey) && e.key === 'p') { e.preventDefault(); window.location.href = '/payloads'; }
+      if (e.key === 'Escape') { document.querySelectorAll('.toast-custom').forEach(t => t.remove()); }
+    });
   </script>
   {% block scripts %}{% endblock %}
 </body>

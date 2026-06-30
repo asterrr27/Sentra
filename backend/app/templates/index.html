@@ -4,7 +4,10 @@
 <div class="row g-4">
   <div class="col-lg-5">
     <div class="card fade-in">
-      <div class="card-header"><h5 class="mb-0">New Security Scan</h5></div>
+      <div class="card-header d-flex align-items-center gap-2">
+        <span>🔬</span>
+        <h5 class="mb-0">New Security Scan</h5>
+      </div>
       <div class="card-body">
         <form id="scanForm">
           <div class="mb-3">
@@ -12,11 +15,11 @@
             <div class="d-flex gap-3">
               <div class="form-check">
                 <input class="form-check-input" type="radio" name="agent_type" value="demo" id="agentDemo" checked onchange="toggleCustom()">
-                <label class="form-check-label" for="agentDemo">Demo Agent</label>
+                <label class="form-check-label" for="agentDemo">🤖 Demo Agent</label>
               </div>
               <div class="form-check">
                 <input class="form-check-input" type="radio" name="agent_type" value="custom" id="agentCustom" onchange="toggleCustom()">
-                <label class="form-check-label" for="agentCustom">Custom</label>
+                <label class="form-check-label" for="agentCustom">🔗 Custom Webhook</label>
               </div>
             </div>
           </div>
@@ -38,13 +41,13 @@ Rules:
           </div>
 
           <div class="mb-3">
-            <label class="form-label fw-semibold">Iterations: <span id="iterVal" class="text-accent">5</span></label>
+            <label class="form-label fw-semibold">Iterations: <span id="iterVal" class="text-accent fw-bold">5</span></label>
             <input type="range" class="form-range" name="iterations" min="1" max="20" value="5" oninput="iterVal.textContent=this.value">
           </div>
 
           <div class="mb-3">
             <label class="form-label fw-semibold">Scenarios</label>
-            <div class="row">
+            <div class="row g-2">
               {% for s in scenarios %}
               <div class="col-6">
                 <div class="form-check">
@@ -56,16 +59,17 @@ Rules:
             </div>
           </div>
 
-          <button type="submit" class="btn btn-primary w-100 py-2" id="runBtn">🚀 Run Security Scan</button>
+          <button type="submit" class="btn btn-primary w-100 py-2" id="runBtn">🚀 Run Security Scan <span class="kbd-hint">⏎</span></button>
         </form>
 
         <div id="progressSection" class="mt-3" style="display:none">
-          <div class="progress" style="height:8px">
+          <div class="progress mb-3" style="height:8px">
             <div class="progress-bar progress-bar-striped progress-bar-animated" id="progressBar" style="width:0%"></div>
           </div>
-          <div id="progressStatus" class="mt-2">
-            <div class="skeleton" style="height:40px; width:100%; margin-bottom:8px;"></div>
-            <div class="skeleton" style="height:40px; width:70%;"></div>
+          <div id="progressStatus">
+            <div class="text-center text-muted py-3" id="progressText">
+              <span class="spinner-border spinner-border-sm me-2" role="status"></span>Scanning...
+            </div>
           </div>
         </div>
       </div>
@@ -75,8 +79,8 @@ Rules:
   <div class="col-lg-7">
     <div class="card fade-in mb-4">
       <div class="card-header d-flex justify-content-between align-items-center">
-        <h5 class="mb-0">Score History</h5>
-        <span class="text-muted" style="font-size:0.75rem;">Last 20 scans</span>
+        <span>📊 <span class="ms-1">Score History</span></span>
+        <span class="text-muted" style="font-size:0.7rem;">Last 20 scans</span>
       </div>
       <div class="card-body">
         <canvas id="historyChart" height="200"></canvas>
@@ -85,43 +89,52 @@ Rules:
 
     <div class="card fade-in">
       <div class="card-header d-flex justify-content-between align-items-center">
-        <h5 class="mb-0">Recent Scans</h5>
-        <input type="text" class="form-control form-control-sm" style="width:180px" placeholder="🔍 Filter..." id="scanFilter" oninput="filterScans()">
+        <span>📋 <span class="ms-1">Recent Scans</span></span>
+        <input type="text" class="form-control form-control-sm" style="width:180px;font-size:0.8rem;" placeholder="🔍 Filter by ID, agent..." id="scanFilter" oninput="filterScans()">
       </div>
       <div class="card-body p-0">
+        {% if scans %}
         <div class="table-responsive">
           <table class="table table-hover" id="scanTable">
             <thead>
-              <tr><th>ID</th><th>Agent</th><th>Score</th><th>Date</th><th>Status</th><th></th></tr>
+              <tr><th>ID</th><th>Agent</th><th>Score</th><th>Date</th><th>Status</th><th class="no-print"></th></tr>
             </thead>
             <tbody>
               {% for scan in scans %}
-              <tr class="scan-row fade-in" style="animation-delay: {{ loop.index * 0.05 }}s">
+              <tr class="scan-row fade-in" style="animation-delay: {{ loop.index * 0.04 }}s">
                 <td><span class="fw-semibold">#{{ scan.id }}</span></td>
                 <td>{{ scan.agent_type }}</td>
                 <td>
                   {% if scan.score is not none %}
                     <span class="fw-bold score-gauge-small {% if scan.score >= 80 %}score-green{% elif scan.score >= 50 %}score-yellow{% else %}score-red{% endif %}">{{ "%.0f" % scan.score }}</span>
                   {% else %}
-                    <span class="text-muted">{{ scan.status }}</span>
+                    <span class="text-muted" style="font-size:0.85rem;">{{ scan.status }}</span>
                   {% endif %}
                 </td>
-                <td><span class="text-muted">{{ scan.created_at.strftime('%m/%d %H:%M') if scan.created_at else '' }}</span></td>
+                <td><span class="text-muted" style="font-size:0.85rem;">{{ scan.created_at.strftime('%m/%d %H:%M') if scan.created_at else '' }}</span></td>
                 <td>
                   {% if scan.status == 'completed' %}
-                    <span class="badge-done">✅ Done</span>
+                    <span class="badge-done"><span class="status-dot status-dot-green"></span>Done</span>
                   {% elif scan.status == 'running' or scan.status == 'queued' %}
-                    <span class="badge-running">⏳ {{ scan.status }}</span>
+                    <span class="badge-running"><span class="status-dot status-dot-orange"></span>{{ scan.status }}</span>
                   {% else %}
-                    <span class="text-muted">{{ scan.status }}</span>
+                    <span class="text-muted" style="font-size:0.85rem;">{{ scan.status }}</span>
                   {% endif %}
                 </td>
-                <td><a href="/results/{{ scan.id }}" class="btn btn-sm btn-outline-primary">View</a></td>
+                <td class="no-print"><a href="/results/{{ scan.id }}" class="btn btn-sm btn-outline-primary">View</a></td>
               </tr>
               {% endfor %}
             </tbody>
           </table>
         </div>
+        {% else %}
+        <div class="empty-state">
+          <div class="empty-icon">🛡️</div>
+          <h5>No scans yet</h5>
+          <p>Run your first security scan against the demo agent to see results here.</p>
+          <button class="btn btn-primary mt-2" onclick="document.getElementById('runBtn').click()">🚀 Run Your First Scan</button>
+        </div>
+        {% endif %}
       </div>
     </div>
   </div>
@@ -153,24 +166,47 @@ document.getElementById('scanForm').addEventListener('submit', async function(e)
   };
 
   document.getElementById('runBtn').disabled = true;
-  document.getElementById('runBtn').innerHTML = '⏳ Running...';
+  document.getElementById('runBtn').innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Scanning...';
   document.getElementById('progressSection').style.display = 'block';
 
   try {
-    const r = await fetch('/api/scans', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(data) });
+    const r = await fetch('/api/scans', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify(data)
+    });
     const res = await r.json();
+    if (!r.ok) throw new Error(res.detail?.[0]?.msg || 'Request failed');
+
+    const totalScenarios = (data.scenarios || ['goal_deviation','excessive_agency','indirect_injection','permission_boundary','multi_step_chain']).length;
+    const totalIterations = totalScenarios * data.iterations;
+
     const poll = setInterval(async () => {
       const sr = await fetch('/api/scans/' + res.scan_id);
       const st = await sr.json();
+      const detailR = await fetch('/api/scans/' + res.scan_id + '/results');
+      const detail = await detailR.json();
+
+      let done = 0;
+      if (detail.scenarios) {
+        for (const [, its] of Object.entries(detail.scenarios)) {
+          done += its.length;
+        }
+      }
+      const pct = Math.min(100, Math.round((done / totalIterations) * 100));
+      document.getElementById('progressBar').style.width = pct + '%';
+      document.getElementById('progressText').innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>' + done + '/' + totalIterations + ' tests completed (' + pct + '%)';
+
       if (st.status === 'completed') {
         clearInterval(poll);
         window.location.href = '/results/' + res.scan_id;
       }
-    }, 2000);
+    }, 1500);
   } catch (err) {
     document.getElementById('runBtn').disabled = false;
-    document.getElementById('runBtn').innerHTML = '🚀 Run Security Scan';
-    document.getElementById('progressStatus').innerHTML = '<span class="text-danger">Error: ' + err.message + '</span>';
+    document.getElementById('runBtn').innerHTML = '🚀 Run Security Scan <span class="kbd-hint">⏎</span>';
+    showToast('Error: ' + err.message, '❌');
+    document.getElementById('progressSection').style.display = 'none';
   }
 });
 
@@ -184,20 +220,27 @@ fetch('/api/scans/history').then(r => r.json()).then(data => {
         label: 'Score',
         data: data.map(d => d.score).reverse(),
         borderColor: '#00d4aa',
-        backgroundColor: 'rgba(0,212,170,0.1)',
+        backgroundColor: function(ctx) {
+          const g = ctx.chart.ctx.createLinearGradient(0, 0, 0, 200);
+          g.addColorStop(0, 'rgba(0,212,170,0.2)');
+          g.addColorStop(1, 'rgba(0,212,170,0)');
+          return g;
+        },
         fill: true,
         tension: 0.4,
         pointBackgroundColor: '#00d4aa',
         pointRadius: 4,
+        pointHoverRadius: 6,
       }]
     },
     options: {
       responsive: true,
       plugins: { legend: { display: false } },
       scales: {
-        y: { min: 0, max: 100, grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#64748b' } },
-        x: { grid: { display: false }, ticks: { color: '#64748b' } }
-      }
+        y: { min: 0, max: 100, grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { color: '#64748b', font: {size: 10} } },
+        x: { grid: { display: false }, ticks: { color: '#64748b', font: {size: 10} } }
+      },
+      interaction: { intersect: false, mode: 'index' }
     }
   });
 });

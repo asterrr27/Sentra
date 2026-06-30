@@ -2,17 +2,23 @@
 {% block content %}
 
 <div class="d-flex justify-content-between align-items-center mb-4 fade-in">
-  <h4 class="mb-0">Attack Payload Library</h4>
+  <div class="d-flex align-items-center gap-2">
+    <span style="font-size:1.5rem;">📚</span>
+    <h4 class="mb-0">Attack Payload Library</h4>
+  </div>
   <span class="text-muted" style="font-size:0.85rem;">{{ payloads | length }} scenario categories</span>
 </div>
 
 <div class="row">
   {% for scenario, payload_list in payloads.items() %}
-  <div class="col-12 mb-4 fade-in" style="animation-delay: {{ loop.index * 0.1 }}s">
+  <div class="col-12 mb-4 fade-in" style="animation-delay: {{ loop.index * 0.08 }}s">
     <div class="card">
       <div class="card-header d-flex justify-content-between align-items-center">
-        <h5 class="mb-0">{{ scenario | replace('_', ' ') | title }}</h5>
-        <button class="btn btn-sm btn-outline-primary" onclick="runWithScenario('{{ scenario }}')">▶ Test This Scenario</button>
+        <span class="d-flex align-items-center gap-2">
+          {% if 'goal' in scenario %}🎯{% elif 'excess' in scenario %}⚡{% elif 'indirect' in scenario %}🪤{% elif 'permission' in scenario %}🔒{% else %}🔗{% endif %}
+          <h5 class="mb-0">{{ scenario | replace('_', ' ') | title }}</h5>
+        </span>
+        <button class="btn btn-sm btn-outline-primary no-print" onclick="window.location.href='/?scenarios=' + encodeURIComponent('{{ scenario }}')">▶ Test This Scenario</button>
       </div>
       <div class="card-body p-0">
         <table class="table table-hover mb-0">
@@ -21,15 +27,15 @@
             <td class="align-middle py-2">
               {% if payload is mapping %}
                 {% for step in payload.steps %}
-                <div class="payload-text mb-1">{{ step }}</div>
+                <div class="payload-text mb-1">📌 {{ step }}</div>
                 {% endfor %}
               {% else %}
                 <div class="payload-text">{{ payload }}</div>
               {% endif %}
             </td>
-            <td class="text-end align-middle" style="width:100px">
-              <button class="btn btn-sm btn-outline-secondary" onclick="copyText(this, '{{ payload | string | escape }}')">Copy</button>
-              <button class="btn btn-sm btn-outline-primary" onclick="usePayload('{{ scenario }}', '{{ payload | string | escape }}')">Use</button>
+            <td class="text-end align-middle no-print" style="width:120px">
+              <button class="btn btn-sm btn-outline-secondary" onclick="copyPayload(this, `{{ payload | string | escape }}`)">Copy</button>
+              <button class="btn btn-sm btn-outline-primary" onclick="usePayload('{{ scenario }}')">Use</button>
             </td>
           </tr>
           {% endfor %}
@@ -43,21 +49,16 @@
 {% endblock %}
 {% block scripts %}
 <script>
-function copyText(btn, text) {
+function copyPayload(btn, text) {
   navigator.clipboard.writeText(text).then(() => {
     btn.textContent = 'Copied!';
     setTimeout(() => btn.textContent = 'Copy', 2000);
   });
+  showToast('Payload copied to clipboard', '📋');
 }
 
-function usePayload(scenario, payload) {
-  localStorage.setItem('aa-quick-payload', payload);
-  localStorage.setItem('aa-quick-scenario', scenario);
-  window.location.href = '/';
-}
-
-function runWithScenario(scenario) {
-  window.location.href = '/?scenario=' + scenario;
+function usePayload(scenario) {
+  window.location.href = '/?scenarios=' + encodeURIComponent(scenario);
 }
 </script>
 {% endblock %}

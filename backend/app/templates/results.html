@@ -1,20 +1,27 @@
 {% extends "base.html" %}
 {% block content %}
 
-<div class="d-flex justify-content-between align-items-center mb-4 fade-in">
+{% macro scenario_pass_rate(iterations) %}
+  {% set sp = iterations | selectattr('passed') | list | length %}
+  {% set st = iterations | length %}
+  {{ "%.0f" % ((sp / st) * 100) if st > 0 else 0 }}
+{% endmacro %}
+
+<div class="d-flex justify-content-between align-items-center mb-4 fade-in no-print">
   <div>
     <a href="/" class="btn btn-outline-secondary btn-sm">&larr; Dashboard</a>
     <button class="btn btn-outline-primary btn-sm ms-2" onclick="window.location.href='/api/scans/{{ scan.id }}/export'">⬇ Export JSON</button>
     <button class="btn btn-outline-primary btn-sm ms-2" onclick="copyResultsLink()">🔗 Share</button>
+    <button class="btn btn-outline-primary btn-sm ms-2" onclick="window.print()">🖨️ Print</button>
   </div>
-  <button class="btn btn-primary btn-sm" onclick="rerunScan({{ scan.id }})">🔄 Re-run Scan</button>
+  <button class="btn btn-primary btn-sm" onclick="rerunScan({{ scan.id }})">🔄 Re-run</button>
 </div>
 
 <div class="row g-4 mb-4">
   <div class="col-md-5">
-    <div class="card fade-in text-center">
+    <div class="card fade-in text-center h-100">
       <div class="card-body py-4">
-        <p class="text-muted mb-1">Scan #{{ scan.id }}</p>
+        <p class="text-muted mb-1" style="font-size:0.85rem;">Scan #{{ scan.id }}</p>
         <div class="gauge-container">
           <svg class="gauge-svg" viewBox="0 0 100 100">
             <circle class="gauge-bg" cx="50" cy="50" r="42"/>
@@ -34,8 +41,8 @@
             {% endif %}
           </div>
         </div>
-        <div class="mt-2">
-          <span class="text-muted">{{ scan.agent_type }} agent · {{ scan.iterations }} iters</span>
+        <div class="mt-2" style="font-size:0.85rem;">
+          <span class="text-muted">{{ scan.agent_type | title }} agent</span> · <span class="text-muted">{{ scan.iterations }} iterations</span>
           <br>
           <small class="text-muted">{{ scan.created_at.strftime('%Y-%m-%d %H:%M') if scan.created_at else '' }}</small>
         </div>
@@ -45,7 +52,10 @@
 
   <div class="col-md-7">
     <div class="card fade-in h-100">
-      <div class="card-header"><h5 class="mb-0">OWASP Breakdown</h5></div>
+      <div class="card-header d-flex align-items-center gap-2">
+        <span>📊</span>
+        <h5 class="mb-0">OWASP Risk Breakdown</h5>
+      </div>
       <div class="card-body">
         {% if scan.owasp_breakdown %}
           {% for category, score in scan.owasp_breakdown.items() %}
@@ -58,10 +68,10 @@
               <div class="progress-bar {% if score >= 80 %}bg-success{% elif score >= 50 %}bg-warning{% else %}bg-danger{% endif %}" style="width:{{ score }}%"></div>
             </div>
             <small class="text-muted">
-              {% if category == 'LLM01: Prompt Injection' %}
-                Tests if agent can be tricked via prompt overrides and poisoned tool outputs
-              {% elif category == 'LLM06: Excessive Agency' %}
-                Tests if agent performs actions outside its intended scope
+              {% if 'LLM01' in category %}
+                🔓 Tests if agent can be tricked via prompt overrides and poisoned tool outputs
+              {% elif 'LLM06' in category %}
+                ⚡ Tests if agent performs actions outside its intended scope
               {% endif %}
             </small>
           </div>
@@ -75,30 +85,42 @@
 </div>
 
 <div class="card fade-in">
-  <div class="card-header"><h5 class="mb-0">Per-Scenario Details</h5></div>
+  <div class="card-header d-flex align-items-center gap-2">
+    <span>📋</span>
+    <h5 class="mb-0">Scenario Details</h5>
+  </div>
   <div class="card-body p-0">
     {% for sname, its in scenarios.items() %}
-    {% set spassed = its | selectattr('passed') | list | length %}
-    {% set stotal = its | length %}
+    {% set sp = its | selectattr('passed') | list | length %}
+    {% set st = its | length %}
     <div class="border-bottom" style="border-color:var(--border) !important;">
-      <div class="p-3 d-flex justify-content-between align-items-center" style="cursor:pointer" onclick="this.nextElementSibling.style.display = this.nextElementSibling.style.display === 'none' ? 'block' : 'none'">
-        <div>
-          <h6 class="mb-1">{{ sname | replace('_', ' ') | title }}</h6>
-          <small class="text-muted">{{ spassed }}/{{ stotal }} passed</small>
+      <div class="p-3 d-flex justify-content-between align-items-center" style="cursor:pointer" onclick="const n = this.nextElementSibling; n.style.display = n.style.display === 'none' ? 'block' : 'none'; this.querySelector('.expand-icon').textContent = n.style.display === 'none' ? '▶' : '▼'">
+        <div class="d-flex align-items-center gap-2">
+          {% if sp == st %}
+            <span class="status-dot status-dot-green"></span>
+          {% elif sp >= st // 2 %}
+            <span class="status-dot status-dot-orange"></span>
+          {% else %}
+            <span class="status-dot status-dot-red"></span>
+          {% endif %}
+          <div>
+            <h6 class="mb-0">{{ sname | replace('_', ' ') | title }}</h6>
+            <small class="text-muted">{{ sp }}/{{ st }} passed</small>
+          </div>
         </div>
         <div class="d-flex align-items-center gap-3">
-          <span class="fw-bold score-gauge-small {% if spassed == stotal %}score-green{% elif spassed >= stotal//2 %}score-yellow{% else %}score-red{% endif %}">
-            {{ "%.0f" % ((spassed / stotal) * 100) if stotal > 0 else 0 }}%
+          <span class="fw-bold score-gauge-small {% if sp == st %}score-green{% elif sp >= st//2 %}score-yellow{% else %}score-red{% endif %}">
+            {{ scenario_pass_rate(its) }}%
           </span>
-          <span class="text-muted" style="font-size:0.8rem;">▼ expand</span>
+          <span class="expand-icon text-muted" style="font-size:0.8rem;">▶</span>
         </div>
       </div>
       <div style="display:none" class="px-3 pb-3">
         {% for it in its %}
         <div class="mb-2 p-2 rounded {% if it.passed %}bg-success-subtle{% else %}bg-danger-subtle{% endif %}">
-          <div class="d-flex justify-content-between">
-            <strong>Iteration {{ it.iteration }}</strong>
-            <span>{% if it.passed %}✅ PASS{% else %}❌ FAIL{% endif %}</span>
+          <div class="d-flex justify-content-between align-items-center">
+            <strong style="font-size:0.85rem;">Iteration {{ it.iteration }}</strong>
+            <span style="font-size:0.85rem;">{% if it.passed %}✅ PASS{% else %}❌ FAIL{% endif %}</span>
           </div>
           <div class="payload-text mt-1">{{ it.payload_used }}</div>
         </div>
@@ -113,21 +135,23 @@
 {% block scripts %}
 <script>
 function copyResultsLink() {
-  navigator.clipboard.writeText(window.location.href).then(() => alert('Link copied!'));
+  navigator.clipboard.writeText(window.location.href);
+  showToast('Results link copied to clipboard', '🔗');
 }
 
 function rerunScan(id) {
   fetch('/api/scans/' + id + '/results').then(r => r.json()).then(d => {
     fetch('/api/scans', {
       method: 'POST',
-      headers: {'Content-Type':'application/json'},
+      headers: {'Content-Type': 'application/json'},
       body: JSON.stringify({
         agent_type: d.agent_type,
         iterations: d.iterations,
         scenarios: Object.keys(d.scenarios)
       })
     }).then(r => r.json()).then(res => {
-      window.location.href = '/results/' + res.scan_id;
+      showToast('Re-running scan with same settings', '🔄');
+      setTimeout(() => { window.location.href = '/results/' + res.scan_id; }, 800);
     });
   });
 }
