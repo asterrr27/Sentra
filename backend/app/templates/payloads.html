@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h4 class="mb-3">Attack Payload Library</h4>
+<p class="text-muted">Click the copy button to copy a payload for use in your own tests.</p>
+
+{% for scenario, payload_list in payloads.items() %}
+<div class="card shadow-sm mb-3">
+  <div class="card-header">
+    <h5 class="mb-0">{{ scenario | replace('_', ' ') | title }}</h5>
+  </div>
+  <div class="card-body p-0">
+    <table class="table table-hover mb-0">
+      {% for payload in payload_list %}
+      <tr>
+        <td class="align-middle">
+          {% if payload is mapping %}
+            {% for step in payload.steps %}
+            <div class="payload-text mb-1">{{ step }}</div>
+            {% endfor %}
+          {% else %}
+            <div class="payload-text">{{ payload }}</div>
+          {% endif %}
+        </td>
+        <td class="text-end align-middle" style="width:80px">
+          <button class="btn btn-sm btn-outline-secondary" onclick="copyText(this, '{{ payload | string | escape }}')">Copy</button>
+        </td>
+      </tr>
+      {% endfor %}
+    </table>
+  </div>
+</div>
+{% endfor %}
+
+<script>
+function copyText(btn, text) {
+  navigator.clipboard.writeText(text).then(() => {
+    btn.textContent = 'Copied!';
+    setTimeout(() => btn.textContent = 'Copy', 2000);
+  });
+}
+</script>
+{% endblock %}

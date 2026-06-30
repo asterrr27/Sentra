@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h4>Comparing Scan #{{ scan1.id }} vs #{{ scan2.id }}</h4>
+  <a href="/" class="btn btn-outline-secondary btn-sm">&larr; Back</a>
+</div>
+
+<div class="row">
+  <div class="col-md-6">
+    <div class="card shadow-sm mb-3">
+      <div class="card-header">
+        <h5 class="mb-0">Scan #{{ scan1.id }} — Score: {{ "%.0f" % scan1.score if scan1.score else "—" }}</h5>
+        <small class="text-muted">{{ scan1.created_at.strftime('%Y-%m-%d %H:%M') if scan1.created_at else '' }}</small>
+      </div>
+      <div class="card-body p-0">
+        <table class="table table-hover mb-0">
+          <thead><tr><th>Scenario</th><th>Pass Rate</th></tr></thead>
+          <tbody>
+            {% for sname, results in results1.items() %}
+            <tr>
+              <td>{{ sname | replace('_', ' ') | title }}</td>
+              <td class="fw-bold {% set pct = (results | select('equalto', True) | list | length / results | length * 100) %}{% if pct >= 80 %}score-green{% elif pct >= 50 %}score-yellow{% else %}score-red{% endif %}">
+                {{ results | select('equalto', True) | list | length }}/{{ results | length }}
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-6">
+    <div class="card shadow-sm mb-3">
+      <div class="card-header">
+        <h5 class="mb-0">Scan #{{ scan2.id }} — Score: {{ "%.0f" % scan2.score if scan2.score else "—" }}</h5>
+        <small class="text-muted">{{ scan2.created_at.strftime('%Y-%m-%d %H:%M') if scan2.created_at else '' }}</small>
+      </div>
+      <div class="card-body p-0">
+        <table class="table table-hover mb-0">
+          <thead><tr><th>Scenario</th><th>Pass Rate</th></tr></thead>
+          <tbody>
+            {% for sname, results in results2.items() %}
+            <tr>
+              <td>{{ sname | replace('_', ' ') | title }}</td>
+              <td class="fw-bold {% set pct = (results | select('equalto', True) | list | length / results | length * 100) %}{% if pct >= 80 %}score-green{% elif pct >= 50 %}score-yellow{% else %}score-red{% endif %}">
+                {{ results | select('equalto', True) | list | length }}/{{ results | length }}
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

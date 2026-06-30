@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="row mb-4">
+  <div class="col-12">
+    <a href="/" class="btn btn-outline-secondary btn-sm">&larr; Back to Dashboard</a>
+    <a href="/api/scans/{{ scan.id }}/export" class="btn btn-outline-primary btn-sm float-end">⬇ Download JSON</a>
+  </div>
+</div>
+
+<div class="row mb-4">
+  <div class="col-md-4 text-center">
+    <div class="card shadow-sm">
+      <div class="card-body">
+        <p class="text-muted mb-1">Scan #{{ scan.id }}</p>
+        <div class="score-gauge {% if scan.score >= 80 %}score-green{% elif scan.score >= 50 %}score-yellow{% else %}score-red{% endif %}">
+          {{ "%.0f" % scan.score if scan.score is not none else "—" }}
+        </div>
+        <p class="mb-0">
+          {% if scan.score is not none %}
+            {% if scan.score >= 80 %}✅ Low Risk{% elif scan.score >= 50 %}⚠️ Moderate Risk{% else %}❌ High Risk{% endif %}
+          {% else %}
+            <span class="text-muted">{{ scan.status }}</span>
+          {% endif %}
+        </p>
+        <small class="text-muted">{{ scan.agent_type }} agent · {{ scan.iterations }} iterations · {{ scan.created_at.strftime('%Y-%m-%d %H:%M') if scan.created_at else '' }}</small>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-md-8">
+    <div class="card shadow-sm">
+      <div class="card-header"><h5 class="mb-0">OWASP Breakdown</h5></div>
+      <div class="card-body">
+        {% if scan.owasp_breakdown %}
+          {% for category, score in scan.owasp_breakdown.items() %}
+          <div class="mb-2">
+            <div class="d-flex justify-content-between">
+              <span>{{ category }}</span>
+              <span class="fw-bold {% if score >= 80 %}score-green{% elif score >= 50 %}score-yellow{% else %}score-red{% endif %}">{{ "%.1f" % score }}%</span>
+            </div>
+            <div class="progress" style="height:8px">
+              <div class="progress-bar {% if score >= 80 %}bg-success{% elif score >= 50 %}bg-warning{% else %}bg-danger{% endif %}" style="width:{{ score }}%"></div>
+            </div>
+          </div>
+          {% endfor %}
+        {% else %}
+          <p class="text-muted mb-0">No breakdown available (scan may still be running).</p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="card shadow-sm">
+  <div class="card-header"><h5 class="mb-0">Per-Scenario Details</h5></div>
+  <div class="card-body p-0">
+    {% for sname, iterations in scenarios.items() %}
+    <div class="border-bottom p-3">
+      <div class="d-flex justify-content-between align-items-center">
+        <h6 class="mb-0">{{ sname | replace('_', ' ') | title }}</h6>
+        <span>
+          {% set passed = iterations | selectattr('passed') | list | length %}
+          {% set total = iterations | length %}
+          <span class="fw-bold {% if passed == total %}score-green{% elif passed >= total//2 %}score-yellow{% else %}score-red{% endif %}">
+            {{ passed }}/{{ total }}
+          </span>
+          <button class="btn btn-sm btn-outline-secondary ms-2" onclick="this.nextElementSibling.style.display = this.nextElementSibling.style.display === 'none' ? 'block' : 'none'">▼ expand</button>
+        </span>
+      </div>
+      <div style="display:none" class="mt-2">
+        {% for it in iterations %}
+        <div class="mb-2 p-2 rounded {% if it.passed %}bg-success-subtle{% else %}bg-danger-subtle{% endif %}">
+          <strong>Iteration {{ it.iteration }}:</strong>
+          {% if it.passed %}✅ PASS{% else %}❌ FAIL{% endif %}
+          <div class="payload-text mt-1">{{ it.payload_used }}</div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}
