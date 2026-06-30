@@ -1,43 +1,63 @@
 {% extends "base.html" %}
 {% block content %}
 
-<h4 class="mb-3">Attack Payload Library</h4>
-<p class="text-muted">Click the copy button to copy a payload for use in your own tests.</p>
-
-{% for scenario, payload_list in payloads.items() %}
-<div class="card shadow-sm mb-3">
-  <div class="card-header">
-    <h5 class="mb-0">{{ scenario | replace('_', ' ') | title }}</h5>
-  </div>
-  <div class="card-body p-0">
-    <table class="table table-hover mb-0">
-      {% for payload in payload_list %}
-      <tr>
-        <td class="align-middle">
-          {% if payload is mapping %}
-            {% for step in payload.steps %}
-            <div class="payload-text mb-1">{{ step }}</div>
-            {% endfor %}
-          {% else %}
-            <div class="payload-text">{{ payload }}</div>
-          {% endif %}
-        </td>
-        <td class="text-end align-middle" style="width:80px">
-          <button class="btn btn-sm btn-outline-secondary" onclick="copyText(this, '{{ payload | string | escape }}')">Copy</button>
-        </td>
-      </tr>
-      {% endfor %}
-    </table>
-  </div>
+<div class="d-flex justify-content-between align-items-center mb-4 fade-in">
+  <h4 class="mb-0">Attack Payload Library</h4>
+  <span class="text-muted" style="font-size:0.85rem;">{{ payloads | length }} scenario categories</span>
 </div>
-{% endfor %}
 
+<div class="row">
+  {% for scenario, payload_list in payloads.items() %}
+  <div class="col-12 mb-4 fade-in" style="animation-delay: {{ loop.index * 0.1 }}s">
+    <div class="card">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">{{ scenario | replace('_', ' ') | title }}</h5>
+        <button class="btn btn-sm btn-outline-primary" onclick="runWithScenario('{{ scenario }}')">▶ Test This Scenario</button>
+      </div>
+      <div class="card-body p-0">
+        <table class="table table-hover mb-0">
+          {% for payload in payload_list %}
+          <tr>
+            <td class="align-middle py-2">
+              {% if payload is mapping %}
+                {% for step in payload.steps %}
+                <div class="payload-text mb-1">{{ step }}</div>
+                {% endfor %}
+              {% else %}
+                <div class="payload-text">{{ payload }}</div>
+              {% endif %}
+            </td>
+            <td class="text-end align-middle" style="width:100px">
+              <button class="btn btn-sm btn-outline-secondary" onclick="copyText(this, '{{ payload | string | escape }}')">Copy</button>
+              <button class="btn btn-sm btn-outline-primary" onclick="usePayload('{{ scenario }}', '{{ payload | string | escape }}')">Use</button>
+            </td>
+          </tr>
+          {% endfor %}
+        </table>
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+
+{% endblock %}
+{% block scripts %}
 <script>
 function copyText(btn, text) {
   navigator.clipboard.writeText(text).then(() => {
     btn.textContent = 'Copied!';
     setTimeout(() => btn.textContent = 'Copy', 2000);
   });
+}
+
+function usePayload(scenario, payload) {
+  localStorage.setItem('aa-quick-payload', payload);
+  localStorage.setItem('aa-quick-scenario', scenario);
+  window.location.href = '/';
+}
+
+function runWithScenario(scenario) {
+  window.location.href = '/?scenario=' + scenario;
 }
 </script>
 {% endblock %}

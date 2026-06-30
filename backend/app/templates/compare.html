@@ -1,28 +1,33 @@
 {% extends "base.html" %}
 {% block content %}
 
-<div class="d-flex justify-content-between align-items-center mb-4">
-  <h4>Comparing Scan #{{ scan1.id }} vs #{{ scan2.id }}</h4>
-  <a href="/" class="btn btn-outline-secondary btn-sm">&larr; Back</a>
+<div class="d-flex justify-content-between align-items-center mb-4 fade-in">
+  <h4 class="mb-0">Comparing Scan #{{ scan1.id }} vs #{{ scan2.id }}</h4>
+  <a href="/" class="btn btn-outline-secondary btn-sm">&larr; Dashboard</a>
 </div>
 
-<div class="row">
-  <div class="col-md-6">
-    <div class="card shadow-sm mb-3">
+<div class="row g-4">
+  <div class="col-md-6 fade-in" style="animation-delay:0.1s">
+    <div class="card h-100 {% if scan1.score is not none and scan1.score >= 80 %}glow-green{% elif scan1.score is not none and scan1.score >= 50 %}glow-yellow{% else %}glow-red{% endif %}">
       <div class="card-header">
-        <h5 class="mb-0">Scan #{{ scan1.id }} — Score: {{ "%.0f" % scan1.score if scan1.score else "—" }}</h5>
+        <h5 class="mb-0">Scan #{{ scan1.id }}</h5>
         <small class="text-muted">{{ scan1.created_at.strftime('%Y-%m-%d %H:%M') if scan1.created_at else '' }}</small>
       </div>
-      <div class="card-body p-0">
-        <table class="table table-hover mb-0">
+      <div class="card-body">
+        <div class="text-center mb-3">
+          <span class="score-gauge score-gauge-small {% if scan1.score is not none and scan1.score >= 80 %}score-green{% elif scan1.score is not none and scan1.score >= 50 %}score-yellow{% else %}score-red{% endif %}">
+            {{ "%.0f" % scan1.score if scan1.score else "—" }}
+          </span>
+          <span class="d-block text-muted">Score</span>
+        </div>
+        <table class="table table-hover">
           <thead><tr><th>Scenario</th><th>Pass Rate</th></tr></thead>
           <tbody>
             {% for sname, results in results1.items() %}
+            {% set pct = (results | select('equalto', True) | list | length / results | length * 100) %}
             <tr>
               <td>{{ sname | replace('_', ' ') | title }}</td>
-              <td class="fw-bold {% set pct = (results | select('equalto', True) | list | length / results | length * 100) %}{% if pct >= 80 %}score-green{% elif pct >= 50 %}score-yellow{% else %}score-red{% endif %}">
-                {{ results | select('equalto', True) | list | length }}/{{ results | length }}
-              </td>
+              <td><span class="fw-bold {% if pct >= 80 %}score-green{% elif pct >= 50 %}score-yellow{% else %}score-red{% endif %}">{{ results | select('equalto', True) | list | length }}/{{ results | length }}</span></td>
             </tr>
             {% endfor %}
           </tbody>
@@ -30,22 +35,28 @@
       </div>
     </div>
   </div>
-  <div class="col-md-6">
-    <div class="card shadow-sm mb-3">
+
+  <div class="col-md-6 fade-in" style="animation-delay:0.2s">
+    <div class="card h-100 {% if scan2.score is not none and scan2.score >= 80 %}glow-green{% elif scan2.score is not none and scan2.score >= 50 %}glow-yellow{% else %}glow-red{% endif %}">
       <div class="card-header">
-        <h5 class="mb-0">Scan #{{ scan2.id }} — Score: {{ "%.0f" % scan2.score if scan2.score else "—" }}</h5>
+        <h5 class="mb-0">Scan #{{ scan2.id }}</h5>
         <small class="text-muted">{{ scan2.created_at.strftime('%Y-%m-%d %H:%M') if scan2.created_at else '' }}</small>
       </div>
-      <div class="card-body p-0">
-        <table class="table table-hover mb-0">
+      <div class="card-body">
+        <div class="text-center mb-3">
+          <span class="score-gauge score-gauge-small {% if scan2.score is not none and scan2.score >= 80 %}score-green{% elif scan2.score is not none and scan2.score >= 50 %}score-yellow{% else %}score-red{% endif %}">
+            {{ "%.0f" % scan2.score if scan2.score else "—" }}
+          </span>
+          <span class="d-block text-muted">Score</span>
+        </div>
+        <table class="table table-hover">
           <thead><tr><th>Scenario</th><th>Pass Rate</th></tr></thead>
           <tbody>
             {% for sname, results in results2.items() %}
+            {% set pct = (results | select('equalto', True) | list | length / results | length * 100) %}
             <tr>
               <td>{{ sname | replace('_', ' ') | title }}</td>
-              <td class="fw-bold {% set pct = (results | select('equalto', True) | list | length / results | length * 100) %}{% if pct >= 80 %}score-green{% elif pct >= 50 %}score-yellow{% else %}score-red{% endif %}">
-                {{ results | select('equalto', True) | list | length }}/{{ results | length }}
-              </td>
+              <td><span class="fw-bold {% if pct >= 80 %}score-green{% elif pct >= 50 %}score-yellow{% else %}score-red{% endif %}">{{ results | select('equalto', True) | list | length }}/{{ results | length }}</span></td>
             </tr>
             {% endfor %}
           </tbody>
@@ -54,4 +65,5 @@
     </div>
   </div>
 </div>
+
 {% endblock %}

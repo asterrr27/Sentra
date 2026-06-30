@@ -23,6 +23,8 @@ app = FastAPI(title="Agent Action Auditor", lifespan=lifespan)
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
+app.mount("/static", StaticFiles(directory="app/static"), name="static")
+
 app.include_router(scans.router)
 app.include_router(dashboard.router)
 app.include_router(payloads.router)

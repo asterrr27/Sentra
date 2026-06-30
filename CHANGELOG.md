@@ -20,3 +20,18 @@
 - Template fix for None score comparison
 - HTTPS via Let's Encrypt for agent-auditor.7.jugaar.ai
 
+
+## [1.1.0] - 2026-06-30
+### Added
+- Dark theme UI with custom CSS (navy/teal/purple palette)
+- Animated SVG score gauge on results page
+- Light/dark theme toggle persisted in localStorage
+- Skeleton loaders during scan progress
+- Scan filter/search on dashboard
+- Auto-poll for scan completion with redirect
+- Re-run scan button on results page
+- Share results link button
+- Payload library  Test This Scenario quick-action
+- Hover tooltips on OWASP categories
+- Fade-in animations throughout
+- Custom scrollbars
