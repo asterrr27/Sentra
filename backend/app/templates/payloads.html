@@ -1,18 +1,18 @@
 {% extends "base.html" %}
 {% block content %}
 
-<div class="d-flex justify-content-between align-items-center mb-4 fade-in">
+<div class="d-flex justify-content-between align-items-center mb-4 scale-in" style="animation-delay:0.05s">
   <div class="d-flex align-items-center gap-2">
     <span style="font-size:1.5rem;">📚</span>
-    <h4 class="mb-0">Attack Payload Library</h4>
+    <h4 class="mb-0 gradient-text">Attack Payload Library</h4>
   </div>
   <span class="text-muted" style="font-size:0.85rem;">{{ payloads | length }} scenario categories</span>
 </div>
 
 <div class="row">
   {% for scenario, payload_list in payloads.items() %}
-  <div class="col-12 mb-4 fade-in" style="animation-delay: {{ loop.index * 0.08 }}s">
-    <div class="card">
+  <div class="col-12 mb-4 scale-in" style="animation-delay: {{ 0.1 + loop.index * 0.06 }}s">
+    <div class="card tilt-card">
       <div class="card-header d-flex justify-content-between align-items-center">
         <span class="d-flex align-items-center gap-2">
           {% if 'goal' in scenario %}🎯{% elif 'excess' in scenario %}⚡{% elif 'indirect' in scenario %}🪤{% elif 'permission' in scenario %}🔒{% else %}🔗{% endif %}
@@ -23,7 +23,7 @@
       <div class="card-body p-0">
         <table class="table table-hover mb-0">
           {% for payload in payload_list %}
-          <tr>
+          <tr class="fade-up" style="animation-delay: {{ 0.1 + loop.index * 0.05 }}s">
             <td class="align-middle py-2">
               {% if payload is mapping %}
                 {% for step in payload.steps %}

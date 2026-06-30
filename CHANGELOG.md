@@ -52,3 +52,19 @@
 - Copy payload toast feedback
 - Form labels now use full-contrast color
 - Gradient on primary buttons
+
+## [1.3.0] - 2026-06-30
+### Added
+- Ripple click effect on all buttons
+- 3D card tilt on mouse hover (perspective rotation)
+- Magnetic button effect (button follows cursor)
+- Staggered scale-in entrance animations on all cards
+- Fade-up entrance on lazy-loaded elements
+- Page transition fade overlay between navigation
+- Animated gradient shimmer on card left borders
+- Score count-up animation (0 → final with cubic easing)
+- Gauge overshoot bounce via cubic-bezier timing
+- Subtle dot grid background pattern
+- Gradient text on headers and key values
+- Content shuffle slide transition on table filter
+- Chart.js animation enabled with easeOutQuart

@@ -7,7 +7,7 @@
   {{ "%.0f" % ((sp / st) * 100) if st > 0 else 0 }}
 {% endmacro %}
 
-<div class="d-flex justify-content-between align-items-center mb-4 fade-in no-print">
+<div class="d-flex justify-content-between align-items-center mb-4 no-print scale-in" style="animation-delay:0.05s">
   <div>
     <a href="/" class="btn btn-outline-secondary btn-sm">&larr; Dashboard</a>
     <button class="btn btn-outline-primary btn-sm ms-2" onclick="window.location.href='/api/scans/{{ scan.id }}/export'">⬇ Export JSON</button>
@@ -19,7 +19,7 @@
 
 <div class="row g-4 mb-4">
   <div class="col-md-5">
-    <div class="card fade-in text-center h-100">
+    <div class="card tilt-card scale-in text-center h-100" style="animation-delay:0.1s">
       <div class="card-body py-4">
         <p class="text-muted mb-1" style="font-size:0.85rem;">Scan #{{ scan.id }}</p>
         <div class="gauge-container">
@@ -30,7 +30,7 @@
               stroke-dasharray="264"
               stroke-dashoffset="264"/>
           </svg>
-          <div class="gauge-score {% if scan.score is not none and scan.score >= 80 %}score-green{% elif scan.score is not none and scan.score >= 50 %}score-yellow{% else %}score-red{% endif %}">
+          <div class="gauge-score {% if scan.score is not none and scan.score >= 80 %}score-green{% elif scan.score is not none and scan.score >= 50 %}score-yellow{% else %}score-red{% endif %}" id="scoreDisplay">
             {{ "%.0f" % scan.score if scan.score is not none else "—" }}
           </div>
           <div class="gauge-label">
@@ -51,7 +51,7 @@
   </div>
 
   <div class="col-md-7">
-    <div class="card fade-in h-100">
+    <div class="card tilt-card scale-in h-100" style="animation-delay:0.15s">
       <div class="card-header d-flex align-items-center gap-2">
         <span>📊</span>
         <h5 class="mb-0">OWASP Risk Breakdown</h5>
@@ -59,7 +59,7 @@
       <div class="card-body">
         {% if scan.owasp_breakdown %}
           {% for category, score in scan.owasp_breakdown.items() %}
-          <div class="mb-3">
+          <div class="mb-3 fade-up" style="animation-delay: {{ 0.2 + loop.index * 0.1 }}s">
             <div class="d-flex justify-content-between mb-1">
               <span class="fw-semibold">{{ category }}</span>
               <span class="fw-bold {% if score >= 80 %}score-green{% elif score >= 50 %}score-yellow{% else %}score-red{% endif %}">{{ "%.1f" % score }}%</span>
@@ -84,7 +84,7 @@
   </div>
 </div>
 
-<div class="card fade-in">
+<div class="card tilt-card scale-in" style="animation-delay:0.2s">
   <div class="card-header d-flex align-items-center gap-2">
     <span>📋</span>
     <h5 class="mb-0">Scenario Details</h5>
@@ -93,7 +93,7 @@
     {% for sname, its in scenarios.items() %}
     {% set sp = its | selectattr('passed') | list | length %}
     {% set st = its | length %}
-    <div class="border-bottom" style="border-color:var(--border) !important;">
+    <div class="border-bottom fade-up" style="border-color:var(--border) !important; animation-delay: {{ 0.25 + loop.index * 0.08 }}s">
       <div class="p-3 d-flex justify-content-between align-items-center" style="cursor:pointer" onclick="const n = this.nextElementSibling; n.style.display = n.style.display === 'none' ? 'block' : 'none'; this.querySelector('.expand-icon').textContent = n.style.display === 'none' ? '▶' : '▼'">
         <div class="d-flex align-items-center gap-2">
           {% if sp == st %}
@@ -117,7 +117,7 @@
       </div>
       <div style="display:none" class="px-3 pb-3">
         {% for it in its %}
-        <div class="mb-2 p-2 rounded {% if it.passed %}bg-success-subtle{% else %}bg-danger-subtle{% endif %}">
+        <div class="mb-2 p-2 rounded {% if it.passed %}bg-success-subtle{% else %}bg-danger-subtle{% endif %} scale-in" style="animation-delay: {{ 0.1 + loop.index * 0.05 }}s">
           <div class="d-flex justify-content-between align-items-center">
             <strong style="font-size:0.85rem;">Iteration {{ it.iteration }}</strong>
             <span style="font-size:0.85rem;">{% if it.passed %}✅ PASS{% else %}❌ FAIL{% endif %}</span>
@@ -156,13 +156,32 @@ function rerunScan(id) {
   });
 }
 
+function animateValue(el, start, end, duration) {
+  if (!el) return;
+  const startTime = performance.now();
+  function step(currentTime) {
+    const elapsed = currentTime - startTime;
+    const progress = Math.min(elapsed / duration, 1);
+    const eased = 1 - Math.pow(1 - progress, 3);
+    const current = Math.round(start + (end - start) * eased);
+    el.textContent = current;
+    if (progress < 1) requestAnimationFrame(step);
+  }
+  requestAnimationFrame(step);
+}
+
 setTimeout(() => {
+  const score = {{ scan.score if scan.score is not none else 0 }};
   const arc = document.getElementById('gaugeArc');
+  const display = document.getElementById('scoreDisplay');
   if (arc) {
-    const score = {{ scan.score if scan.score is not none else 0 }};
     const offset = 264 - (264 * score / 100);
     arc.style.strokeDashoffset = offset;
   }
-}, 300);
+  if (display) {
+    const finalScore = {{ scan.score if scan.score is not none else 0 }};
+    animateValue(display, 0, finalScore, 1200);
+  }
+}, 400);
 </script>
 {% endblock %}
