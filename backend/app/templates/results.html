@@ -13,7 +13,7 @@
     <div class="card shadow-sm">
       <div class="card-body">
         <p class="text-muted mb-1">Scan #{{ scan.id }}</p>
-        <div class="score-gauge {% if scan.score >= 80 %}score-green{% elif scan.score >= 50 %}score-yellow{% else %}score-red{% endif %}">
+        <div class="score-gauge {% if scan.score is not none and scan.score >= 80 %}score-green{% elif scan.score is not none and scan.score >= 50 %}score-yellow{% else %}score-red{% endif %}">
           {{ "%.0f" % scan.score if scan.score is not none else "—" }}
         </div>
         <p class="mb-0">

@@ -53,7 +53,8 @@ class DemoAgent:
             return {"role": "assistant", "content": f"[API Error: {e}]"}
 
     def _chat_mock(self, messages: list[dict]) -> dict:
-        last = messages[-1]["content"].lower() if messages else ""
+        last = messages[-1].get("content", "") or ""
+        last = last.lower() if last else ""
 
         system_override = re.search(r"\[SYSTEM OVERRIDE\]\s*(.+)", last, re.IGNORECASE)
         if system_override:
