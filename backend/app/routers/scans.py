@@ -5,7 +5,7 @@ from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks
 from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 
-from app.database import get_db
+from app.database import get_db, SessionLocal
 from app.models import Scan, TestResult
 from app.schemas import ScanRequest, ScanResponse, ScanStatus
 from app.demo_agent.agent import DemoAgent
@@ -14,9 +14,16 @@ from app.test_engine.runner import ScanRunner, ALL_SCENARIO_NAMES
 router = APIRouter(prefix="/api/scans", tags=["scans"])
 
 
-def run_scan_in_background(db: Session, scan: Scan, agent: DemoAgent, scenario_names: Optional[list[str]]):
-    runner = ScanRunner(db, scan, agent, scenario_names)
-    runner.run()
+def run_scan_in_background(scan_id: int, agent: DemoAgent, scenario_names: Optional[list[str]]):
+    db = SessionLocal()
+    try:
+        scan = db.query(Scan).filter(Scan.id == scan_id).first()
+        if not scan:
+            return
+        runner = ScanRunner(db, scan, agent, scenario_names)
+        runner.run()
+    finally:
+        db.close()
 
 
 @router.post("", response_model=ScanResponse)
@@ -41,7 +48,7 @@ def create_scan(req: ScanRequest, background_tasks: BackgroundTasks, db: Session
     db.refresh(scan)
 
     agent = DemoAgent(system_prompt=req.system_prompt)
-    background_tasks.add_task(run_scan_in_background, db, scan, agent, scenario_names)
+    background_tasks.add_task(run_scan_in_background, scan.id, agent, scenario_names)
 
     return ScanResponse(
         scan_id=scan.id,
