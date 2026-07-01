@@ -4,7 +4,7 @@ import { motion } from 'framer-motion'
 import PageTransition from '../components/layout/PageTransition'
 import AttackFlow from '../components/ui/AttackFlow'
 import Terminal from '../components/ui/Terminal'
-import { createScan, getScanStatus, getScanResults, getScanHistory, listScans, cancelScan } from '../utils/api'
+import { createScan, getScanStatus, getScanResults, listScans, cancelScan } from '../utils/api'
 import { Chart, registerables } from 'chart.js'
 
 Chart.register(...registerables)
@@ -50,7 +50,6 @@ export default function Dashboard() {
   const [completedScenarios, setCompletedScenarios] = useState(0)
   const [cycle, setCycle] = useState(0)
   const [scans, setScans] = useState([])
-  const [history, setHistory] = useState([])
   const [compareIds, setCompareIds] = useState([])
   const chartRef = useRef(null)
   const chartInstance = useRef(null)
@@ -59,20 +58,20 @@ export default function Dashboard() {
 
   useEffect(() => {
     listScans().then(setScans).catch(() => {})
-    getScanHistory().then(setHistory).catch(() => {})
   }, [])
 
   useEffect(() => {
-    if (!chartRef.current || !history.length) return
+    const completed = scans.filter(s => s.score !== null)
+    if (!chartRef.current || !completed.length) return
     if (chartInstance.current) chartInstance.current.destroy()
     const ctx = chartRef.current.getContext('2d')
     chartInstance.current = new Chart(ctx, {
       type: 'line',
       data: {
-        labels: history.map(d => '#' + d.id).reverse(),
+        labels: completed.map(d => '#' + d.scan_id).reverse(),
         datasets: [{
           label: 'Score',
-          data: history.map(d => d.score).reverse(),
+          data: completed.map(d => d.score).reverse(),
           borderColor: '#06B6D4',
           backgroundColor: ctx => {
             const g = ctx.chart.ctx.createLinearGradient(0, 0, 0, 200)
@@ -99,7 +98,7 @@ export default function Dashboard() {
       },
     })
     return () => { if (chartInstance.current) chartInstance.current.destroy() }
-  }, [history])
+  }, [scans])
 
   const validateUrl = useCallback(() => {
     if (!agentUrl) return
