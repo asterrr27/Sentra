@@ -17,9 +17,10 @@ export default function Terminal({ lines = [] }) {
       <AnimatePresence>
         {lines.map((line, i) => (
           <motion.div
-            key={i}
+            key={`${i}-${typeof line.text === 'string' ? line.text.slice(0, 20) : i}`}
             initial={{ opacity: 0, x: -10 }}
             animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: 10 }}
             transition={{ duration: 0.2, delay: i === lines.length - 1 ? 0 : 0 }}
             className={`${line.type === 'pass' ? 'text-success' : line.type === 'fail' ? 'text-danger' : line.type === 'info' ? 'text-white/40' : 'text-primary'}`}
           >
@@ -31,7 +32,9 @@ export default function Terminal({ lines = [] }) {
         ))}
       </AnimatePresence>
       <motion.span
+        initial={{ opacity: 1 }}
         animate={{ opacity: [1, 0] }}
+        exit={{ opacity: 0 }}
         transition={{ duration: 0.8, repeat: Infinity }}
         className="text-primary"
       >█</motion.span>

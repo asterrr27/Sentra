@@ -29,10 +29,6 @@ export function getScanResults(id) {
   return api.get(`/scans/${id}/results`).then(r => r.data)
 }
 
-export function getScanHistory() {
-  return api.get('/scans/history').then(r => r.data)
-}
-
 export function listScans() {
   return api.get('/scans').then(r => r.data)
 }

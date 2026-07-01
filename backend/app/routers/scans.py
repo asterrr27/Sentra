@@ -1,6 +1,5 @@
 import csv
 import io
-import json
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks, Request

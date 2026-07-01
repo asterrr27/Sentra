@@ -52,7 +52,6 @@ export default function Dashboard() {
   const [scans, setScans] = useState([])
   const [compareIds, setCompareIds] = useState([])
   const [fetchError, setFetchError] = useState('')
-  const mountedRef = useRef(true)
   const chartRef = useRef(null)
   const chartInstance = useRef(null)
   const scanIdRef = useRef(null)
@@ -60,7 +59,6 @@ export default function Dashboard() {
 
   useEffect(() => {
     return () => {
-      mountedRef.current = false
       if (pollRef.current) {
         clearInterval(pollRef.current)
         pollRef.current = null
