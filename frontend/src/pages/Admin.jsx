@@ -28,11 +28,27 @@ export default function Admin() {
     ]).finally(() => setLoading(false))
   }, [user, navigate])
 
-  if (loading) return (
-    <PageTransition>
-      <div className="max-w-4xl mx-auto px-4 pt-24 text-center text-white/30">Loading...</div>
-    </PageTransition>
-  )
+  if (loading) {
+    return (
+      <PageTransition>
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-12">
+          <div className="h-7 bg-white/5 rounded w-32 mb-6 animate-pulse" />
+          <div className="flex gap-2 mb-6">
+            <div className="h-9 w-16 bg-white/5 rounded-lg animate-pulse" />
+            <div className="h-9 w-16 bg-white/5 rounded-lg animate-pulse" />
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {[1, 2, 3, 4].map(i => (
+              <div key={i} className="glass-card p-5 animate-pulse">
+                <div className="h-8 w-16 bg-white/5 rounded mx-auto mb-2" />
+                <div className="h-3 w-20 bg-white/5 rounded mx-auto" />
+              </div>
+            ))}
+          </div>
+        </div>
+      </PageTransition>
+    )
+  }
 
   return (
     <PageTransition>
@@ -61,7 +77,7 @@ export default function Admin() {
         )}
 
         {tab === 'users' && (
-          <div className="glass-card overflow-hidden">
+          <div className="glass-card overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
                 <tr className="text-xs text-white/30 uppercase tracking-wider border-b border-white/5">

@@ -44,6 +44,7 @@ export default function Login() {
               <input
                 value={username} onChange={e => setUsername(e.target.value)}
                 className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:border-primary/50"
+                placeholder="your_username"
                 required
               />
             </div>
@@ -52,10 +53,16 @@ export default function Login() {
               <input
                 type="password" value={password} onChange={e => setPassword(e.target.value)}
                 className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:border-primary/50"
+                placeholder="••••••••"
                 required
               />
             </div>
-            {error && <p className="text-xs text-red-400">{error}</p>}
+            {error && <p className="text-xs text-danger">{error}</p>}
+            <div className="flex justify-end">
+              <Link to="/dashboard" className="text-xs text-white/30 hover:text-primary transition-colors">
+                Forgot password?
+              </Link>
+            </div>
             <button
               type="submit" disabled={busy}
               className="w-full py-2.5 text-sm font-semibold text-[#09090B] bg-gradient-to-r from-primary to-secondary rounded-full hover:shadow-lg hover:shadow-primary/20 transition-all disabled:opacity-50"

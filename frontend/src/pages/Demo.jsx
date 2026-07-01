@@ -50,6 +50,8 @@ export default function Demo() {
   const [progress, setProgress] = useState(0)
   const indexRef = useRef(0)
 
+  const timeoutRef = useRef(null)
+
   useEffect(() => {
     if (!started || paused) return
     let unmounted = false
@@ -66,7 +68,7 @@ export default function Demo() {
         indexRef.current = i + 1
       } else {
         clearInterval(lineInterval)
-        setTimeout(() => { if (!unmounted) navigate('/results/demo') }, 500)
+        timeoutRef.current = setTimeout(() => { if (!unmounted) navigate('/results/demo') }, 500)
       }
     }, 220)
 
@@ -74,7 +76,12 @@ export default function Demo() {
       if (!unmounted && !paused) setCycle(c => c + 1)
     }, 180)
 
-    return () => { unmounted = true; clearInterval(lineInterval); clearInterval(cycleInterval) }
+    return () => {
+      unmounted = true
+      clearInterval(lineInterval)
+      clearInterval(cycleInterval)
+      if (timeoutRef.current) clearTimeout(timeoutRef.current)
+    }
   }, [started, paused, navigate])
 
   return (

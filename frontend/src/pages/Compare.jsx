@@ -10,13 +10,40 @@ export default function Compare() {
   const id2 = searchParams.get('id2')
   const [data1, setData1] = useState(null)
   const [data2, setData2] = useState(null)
+  const [err1, setErr1] = useState(null)
+  const [err2, setErr2] = useState(null)
+  const [loading1, setLoading1] = useState(false)
+  const [loading2, setLoading2] = useState(false)
 
   useEffect(() => {
-    if (id1) getScanResults(Number(id1)).then(setData1).catch(() => {})
-    if (id2) getScanResults(Number(id2)).then(setData2).catch(() => {})
+    if (id1) {
+      setLoading1(true)
+      setErr1(null)
+      getScanResults(Number(id1)).then(setData1).catch(e => setErr1(e?.response?.data?.detail || 'Failed to load')).finally(() => setLoading1(false))
+    }
+    if (id2) {
+      setLoading2(true)
+      setErr2(null)
+      getScanResults(Number(id2)).then(setData2).catch(e => setErr2(e?.response?.data?.detail || 'Failed to load')).finally(() => setLoading2(false))
+    }
   }, [id1, id2])
 
-  const Card = ({ data, label }) => {
+  const Card = ({ data, loading, error, label }) => {
+    if (loading) return (
+      <div className="glass-card p-8">
+        <div className="space-y-4 animate-pulse">
+          <div className="h-4 bg-white/5 rounded w-1/3 mx-auto" />
+          <div className="h-16 w-16 bg-white/5 rounded-full mx-auto" />
+          <div className="h-3 bg-white/5 rounded w-1/2 mx-auto" />
+          {[1, 2, 3].map(i => <div key={i} className="h-3 bg-white/5 rounded w-full" />)}
+        </div>
+      </div>
+    )
+    if (error) return (
+      <div className="glass-card p-8 text-center">
+        <p className="text-sm text-danger">{error}</p>
+      </div>
+    )
     if (!data) return (
       <div className="glass-card p-8 text-center">
         <p className="text-sm text-white/30">Paste a scan ID to compare</p>
@@ -71,8 +98,8 @@ export default function Compare() {
           <Link to="/dashboard" className="text-xs text-white/30 hover:text-white transition-colors">&larr; Dashboard</Link>
         </div>
         <div className="grid md:grid-cols-2 gap-6">
-          <Card data={data1} label={id1 ? `Scan #${id1}` : 'Scan 1'} />
-          <Card data={data2} label={id2 ? `Scan #${id2}` : 'Scan 2'} />
+          <Card data={data1} loading={loading1} error={err1} label={id1 ? `Scan #${id1}` : 'Scan 1'} />
+          <Card data={data2} loading={loading2} error={err2} label={id2 ? `Scan #${id2}` : 'Scan 2'} />
         </div>
         {!id1 && !id2 && (
           <div className="text-center mt-12">

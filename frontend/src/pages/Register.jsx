@@ -45,6 +45,7 @@ export default function Register() {
               <input
                 value={username} onChange={e => setUsername(e.target.value)}
                 className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:border-primary/50"
+                placeholder="your_username"
                 required
               />
             </div>
@@ -53,6 +54,7 @@ export default function Register() {
               <input
                 type="email" value={email} onChange={e => setEmail(e.target.value)}
                 className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:border-primary/50"
+                placeholder="you@example.com"
                 required
               />
             </div>
@@ -61,10 +63,12 @@ export default function Register() {
               <input
                 type="password" value={password} onChange={e => setPassword(e.target.value)}
                 className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:border-primary/50"
+                placeholder="minimum 8 characters"
+                minLength={8}
                 required
               />
             </div>
-            {error && <p className="text-xs text-red-400">{error}</p>}
+            {error && <p className="text-xs text-danger">{error}</p>}
             <button
               type="submit" disabled={busy}
               className="w-full py-2.5 text-sm font-semibold text-[#09090B] bg-gradient-to-r from-primary to-secondary rounded-full hover:shadow-lg hover:shadow-primary/20 transition-all disabled:opacity-50"

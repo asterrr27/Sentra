@@ -405,9 +405,9 @@ export default function Dashboard() {
                   </div>
                   <button
                     onClick={handleCancel}
-                    className="px-3 py-1 text-[10px] font-medium text-danger border border-danger/30 rounded-full hover:bg-danger/10 transition-colors shrink-0"
+                    className="px-4 py-1.5 text-xs font-semibold text-danger bg-danger/10 border border-danger/40 rounded-full hover:bg-danger/20 transition-colors shrink-0"
                   >
-                    Cancel
+                    Cancel Scan
                   </button>
                 </div>
                 <Terminal lines={terminalLines} />
@@ -420,10 +420,18 @@ export default function Dashboard() {
             <div className="glass-card p-6">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-sm font-semibold">Score History</h3>
-                <span className="text-[10px] text-white/30">Last 20 scans</span>
+                <span className="text-[10px] text-white/30">{scans.filter(s => s.score !== null).length > 0 ? `${scans.filter(s => s.score !== null).length} scans` : ''}</span>
               </div>
               <div className="h-48">
-                <canvas ref={chartRef} />
+                {scans.filter(s => s.score !== null).length > 0 ? (
+                  <canvas ref={chartRef} />
+                ) : (
+                  <div className="h-full flex flex-col items-center justify-center text-center">
+                    <div className="text-3xl mb-3 opacity-30">📈</div>
+                    <p className="text-sm text-white/40">No score data yet</p>
+                    <p className="text-xs text-white/20 mt-1">Run a security audit to see your score history here</p>
+                  </div>
+                )}
               </div>
             </div>
 

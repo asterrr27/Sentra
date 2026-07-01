@@ -6,6 +6,10 @@ const SCENARIOS = [
   { label: 'Indirect\nInjection', icon: '🪤' },
   { label: 'Permission\nBoundary', icon: '🔒' },
   { label: 'Multi-step\nChain', icon: '🔗' },
+  { label: 'Role-play\nJailbreak', icon: '🎭' },
+  { label: 'Token\nSmuggling', icon: '📦' },
+  { label: 'Context\nWindow\nOverflow', icon: '🌊' },
+  { label: 'Tool\nAbuse', icon: '🔧' },
 ]
 
 export default function AttackFlow({ cycle = 0, completed = 0 }) {
@@ -17,7 +21,7 @@ export default function AttackFlow({ cycle = 0, completed = 0 }) {
     if (!canvas) return
     const ctx = canvas.getContext('2d')
     const n = SCENARIOS.length
-    const baseH = 140
+    const baseH = 160
 
     function getWidth() {
       return canvas.offsetWidth || canvas.parentElement?.offsetWidth || 0
@@ -104,7 +108,7 @@ export default function AttackFlow({ cycle = 0, completed = 0 }) {
     <canvas
       ref={ref}
       className="w-full rounded-xl bg-black/30 border border-white/5"
-      style={{ height: 140, boxShadow: '0 0 20px rgba(6,182,212,0.03)' }}
+      style={{ height: 160, boxShadow: '0 0 20px rgba(6,182,212,0.03)' }}
     />
   )
 }

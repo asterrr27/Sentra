@@ -45,12 +45,6 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* Footer for landing */}
-      <footer className="border-t border-white/5 py-8">
-        <div className="max-w-6xl mx-auto px-4 text-center text-xs text-white/20">
-          &copy; {new Date().getFullYear()} Sentra. Secure AI. Build with Confidence.
-        </div>
-      </footer>
     </PageTransition>
   )
 }

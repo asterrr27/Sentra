@@ -21,10 +21,11 @@ export default function Terminal({ lines = [] }) {
             initial={{ opacity: 0, x: -10 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.2, delay: i === lines.length - 1 ? 0 : 0 }}
-            className={`${line.type === 'pass' ? 'text-success' : line.type === 'fail' ? 'text-danger' : line.type === 'info' ? 'text-white/40' : 'text-primary'} ${line.type !== 'info' ? 'before:content-["$\\00a0"] before:text-primary/50' : ''}`}
+            className={`${line.type === 'pass' ? 'text-success' : line.type === 'fail' ? 'text-danger' : line.type === 'info' ? 'text-white/40' : 'text-primary'}`}
           >
-            {line.type === 'pass' && '✅ '}
-            {line.type === 'fail' && '❌ '}
+            <span className="text-primary/50">$ </span>
+            {line.type === 'pass' && <span role="img" aria-label="passed">✅ </span>}
+            {line.type === 'fail' && <span role="img" aria-label="failed">❌ </span>}
             {line.text}
           </motion.div>
         ))}

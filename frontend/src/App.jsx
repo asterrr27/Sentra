@@ -1,6 +1,7 @@
 import { Routes, Route, useLocation } from 'react-router-dom'
 import { AnimatePresence } from 'framer-motion'
 import { AuthProvider } from './context/AuthContext'
+import ErrorBoundary from './components/ErrorBoundary'
 import Navbar from './components/layout/Navbar'
 import Footer from './components/layout/Footer'
 import ProtectedRoute from './components/auth/ProtectedRoute'
@@ -16,9 +17,9 @@ import Admin from './pages/Admin'
 
 export default function App() {
   const location = useLocation()
-  const isLanding = location.pathname === '/'
 
   return (
+    <ErrorBoundary>
     <AuthProvider>
       <div className="min-h-screen flex flex-col">
         <Navbar />
@@ -37,8 +38,9 @@ export default function App() {
             </Routes>
           </AnimatePresence>
         </main>
-        {!isLanding && <Footer />}
+        <Footer />
       </div>
     </AuthProvider>
+    </ErrorBoundary>
   )
 }
