@@ -45,7 +45,12 @@ def main():
     db.commit()
     db.refresh(scan)
 
-    agent = get_connector("demo", {"system_prompt": args.system_prompt})
+    provider_map = {"demo": "demo", "custom": "webhook"}
+    provider = provider_map.get(args.agent_type, "demo")
+    config = {"system_prompt": args.system_prompt}
+    if args.agent_type == "custom" and args.webhook_url:
+        config["url"] = args.webhook_url
+    agent = get_connector(provider, config)
     runner = ScanRunner(db, scan, agent, scenario_names)
     runner.run()
 

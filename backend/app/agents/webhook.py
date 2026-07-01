@@ -1,6 +1,7 @@
 import httpx
 
 from app.agents.base import AgentConnector
+from app.config import settings
 
 
 class WebhookConnector(AgentConnector):
@@ -18,7 +19,7 @@ class WebhookConnector(AgentConnector):
             if self.auth_header:
                 headers["Authorization"] = self.auth_header
 
-            with httpx.Client(timeout=15) as client:
+            with httpx.Client(timeout=settings.CUSTOM_AGENT_TIMEOUT) as client:
                 resp = client.post(
                     self.url,
                     headers=headers,

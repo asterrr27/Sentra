@@ -1,21 +1,29 @@
 import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import PageTransition from '../components/layout/PageTransition'
+import { useAuth } from '../context/AuthContext'
 import api from '../utils/api'
 
 export default function Admin() {
+  const navigate = useNavigate()
+  const { user } = useAuth()
   const [tab, setTab] = useState('stats')
   const [stats, setStats] = useState(null)
   const [users, setUsers] = useState([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
+    if (user && user.role !== 'admin') {
+      navigate('/dashboard', { replace: true })
+      return
+    }
     setLoading(true)
     Promise.all([
       api.get('/admin/stats').then(r => setStats(r.data)).catch(() => {}),
       api.get('/admin/users').then(r => setUsers(r.data)).catch(() => {}),
     ]).finally(() => setLoading(false))
-  }, [])
+  }, [user, navigate])
 
   if (loading) return (
     <PageTransition>
