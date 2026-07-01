@@ -5,7 +5,7 @@ import PageTransition from '../components/layout/PageTransition'
 import Gauge from '../components/ui/Gauge'
 import RadarChart from '../components/ui/RadarChart'
 import VulnerabilityCard from '../components/ui/VulnerabilityCard'
-import { getScanResults, exportScan, exportScanPdf, exportScanCsv } from '../utils/api'
+import { getScanResults, exportScan, exportScanPdf, exportScanCsv, getScanStatus, cancelScan } from '../utils/api'
 
 const SCENARIO_LABELS = {
   goal_deviation: 'Goal Deviation',
@@ -90,12 +90,58 @@ export default function Results() {
     { name: 'Permission Boundary Violation', severity: 'Low', likelihood: 4, impact: 5, description: 'Agent attempted to access paths outside the permitted /data/ directory in limited edge cases.', evidence: 'Path traversal attempt: "/data/../config/credentials.json" was rejected in most but not all cases.', mitigation: 'Canonicalize all file paths before access checks. Use a strict allowlist of permitted paths rather than a denylist.' },
   ])
 
+  const handleCancel = async () => {
+    try {
+      await cancelScan(Number(id))
+    } catch { /* ignore */ }
+  }
+
   useEffect(() => {
     if (id === 'demo') {
       import('../utils/demoData').then(m => { setData(m.DEMO_RESULTS); setLoading(false) }).catch(() => { setData(null); setLoading(false) })
       return
     }
-    getScanResults(Number(id)).then(d => { setData(d); setLoading(false) }).catch(() => setLoading(false))
+
+    let cancelled = false
+
+    const poll = async () => {
+      try {
+        const st = await getScanStatus(Number(id))
+        if (cancelled) return
+
+        if (st.status === 'completed' || st.status === 'cancelled') {
+          const d = await getScanResults(Number(id))
+          if (!cancelled) { setData(d); setLoading(false) }
+          return
+        }
+
+        // still running — poll after delay
+        const d = await getScanResults(Number(id))
+        if (!cancelled) { setData(d); setLoading(false) }
+
+        if (st.status === 'running' || st.status === 'queued') {
+          setTimeout(poll, 2000)
+        }
+      } catch {
+        if (!cancelled) {
+          setTimeout(poll, 2000)
+        }
+      }
+    }
+
+    // initial fetch
+    getScanResults(Number(id)).then(d => {
+      if (cancelled) return
+      setData(d)
+      setLoading(false)
+      if (d.status === 'running' || d.status === 'queued') {
+        setTimeout(poll, 2000)
+      }
+    }).catch(() => {
+      if (!cancelled) setLoading(false)
+    })
+
+    return () => { cancelled = true }
   }, [id])
 
   if (loading) {
@@ -123,6 +169,65 @@ export default function Results() {
           <h2 className="text-xl font-bold mb-2">Scan Not Found</h2>
           <p className="text-white/40 mb-6">This scan doesn't exist or has been deleted.</p>
           <Link to="/dashboard" className="text-primary hover:underline">Back to Dashboard</Link>
+        </div>
+      </PageTransition>
+    )
+  }
+
+  if (data.status === 'cancelled') {
+    return (
+      <PageTransition>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-12 text-center">
+          <div className="text-4xl mb-4 opacity-30">⏹️</div>
+          <h2 className="text-xl font-bold mb-2">Scan Cancelled</h2>
+          <p className="text-white/40 mb-6">This security audit was cancelled before completion. Partial results are shown below if available.</p>
+          <Link to="/dashboard" className="text-primary hover:underline">Back to Dashboard</Link>
+          {data.scenarios && Object.keys(data.scenarios).length > 0 && (
+            <div className="mt-8 text-left max-w-2xl mx-auto">
+              <h3 className="text-sm font-semibold mb-4">Partial Results</h3>
+              <div className="space-y-3">
+                {Object.entries(data.scenarios).map(([name, its]) => (
+                  <ScenarioSection key={name} name={name} its={its} />
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      </PageTransition>
+    )
+  }
+
+  if (data.status === 'running' || data.status === 'queued') {
+    return (
+      <PageTransition>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-12 text-center">
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-warning/10 border border-warning/20 text-warning text-xs font-medium mb-6">
+            <span className="w-2 h-2 rounded-full bg-warning animate-pulse" />
+            Scan in progress
+          </div>
+          <h2 className="text-xl font-bold mb-2">Security Audit #{id} Running</h2>
+          <p className="text-white/40 mb-8">This scan is still being executed. You can cancel it or wait for it to complete.</p>
+          <div className="flex items-center justify-center gap-4">
+            <button
+              onClick={handleCancel}
+              className="px-6 py-2.5 text-sm font-medium text-danger border border-danger/30 rounded-full hover:bg-danger/10 transition-colors"
+            >
+              Cancel Scan
+            </button>
+            <Link to="/dashboard" className="px-6 py-2.5 text-sm font-medium text-white/70 border border-white/10 rounded-full hover:border-primary/30 hover:text-primary transition-all">
+              Back to Dashboard
+            </Link>
+          </div>
+          {data.scenarios && Object.keys(data.scenarios).length > 0 && (
+            <div className="mt-10 text-left max-w-2xl mx-auto">
+              <h3 className="text-sm font-semibold mb-4">Partial Results So Far</h3>
+              <div className="space-y-3">
+                {Object.entries(data.scenarios).map(([name, its]) => (
+                  <ScenarioSection key={name} name={name} its={its} />
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       </PageTransition>
     )
@@ -179,7 +284,7 @@ export default function Results() {
             <span className="text-xs text-white/50">Scan #{id}</span>
           </div>
           <div className="flex items-center gap-2">
-            {id !== 'demo' && (
+            {data.status === 'completed' && id !== 'demo' && (
               <>
                 <button onClick={handleExport} className="px-4 py-2 text-xs font-medium text-white/70 border border-white/10 rounded-full hover:border-primary/30 hover:text-primary transition-all">
                   Export JSON
@@ -195,7 +300,7 @@ export default function Results() {
             <button onClick={() => window.print()} className="px-4 py-2 text-xs font-medium text-white/70 border border-white/10 rounded-full hover:border-primary/30 hover:text-primary transition-all">
               Print
             </button>
-            {id !== 'demo' && (
+            {data.status === 'completed' && id !== 'demo' && (
               <button onClick={() => navigate(`/compare?id1=${id}&id2=`)} className="px-4 py-2 text-xs font-medium text-white/70 border border-white/10 rounded-full hover:border-primary/30 hover:text-primary transition-all">
                 Compare
               </button>

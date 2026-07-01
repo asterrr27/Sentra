@@ -37,6 +37,10 @@ export function exportScanCsv(id) {
   return api.get(`/scans/${id}/export/csv`, { responseType: 'blob' }).then(r => r.data)
 }
 
+export function cancelScan(id) {
+  return api.post(`/scans/${id}/cancel`).then(r => r.data)
+}
+
 export function getAllPayloads() {
   return api.get('/payloads').then(r => r.data)
 }

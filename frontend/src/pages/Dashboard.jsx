@@ -4,7 +4,7 @@ import { motion } from 'framer-motion'
 import PageTransition from '../components/layout/PageTransition'
 import AttackFlow from '../components/ui/AttackFlow'
 import Terminal from '../components/ui/Terminal'
-import { createScan, getScanStatus, getScanResults, getScanHistory, listScans } from '../utils/api'
+import { createScan, getScanStatus, getScanResults, getScanHistory, listScans, cancelScan } from '../utils/api'
 import { Chart, registerables } from 'chart.js'
 
 Chart.register(...registerables)
@@ -54,6 +54,8 @@ export default function Dashboard() {
   const [compareIds, setCompareIds] = useState([])
   const chartRef = useRef(null)
   const chartInstance = useRef(null)
+  const scanIdRef = useRef(null)
+  const pollRef = useRef(null)
 
   useEffect(() => {
     listScans().then(setScans).catch(() => {})
@@ -107,6 +109,17 @@ export default function Dashboard() {
     }, 1000)
   }, [agentUrl])
 
+  const handleCancel = useCallback(async () => {
+    if (!scanIdRef.current) return
+    try {
+      await cancelScan(scanIdRef.current)
+      if (pollRef.current) clearInterval(pollRef.current)
+      setTerminalLines(prev => [...prev, { text: 'Scan cancelled by user.', type: 'fail' }])
+      setScanning(false)
+      scanIdRef.current = null
+    } catch { /* ignore */ }
+  }, [])
+
   const startScan = useCallback(async () => {
     setScanning(true)
     setTerminalLines([{ text: 'Connecting to security engine...', type: 'info' }])
@@ -127,6 +140,7 @@ export default function Dashboard() {
       }
 
       const res = await createScan(data)
+      scanIdRef.current = res.scan_id
       const scenarioList = selectedScenarios.length ? selectedScenarios : SCENARIO_LIST
       const totalIterations = scenarioList.length * iterations
 
@@ -140,6 +154,15 @@ export default function Dashboard() {
         try {
           const st = await getScanStatus(res.scan_id)
           const detail = await getScanResults(res.scan_id)
+
+          if (st.status === 'cancelled') {
+            clearInterval(poll)
+            pollRef.current = null
+            scanIdRef.current = null
+            setTerminalLines(prev => [...prev, { text: 'Scan cancelled.', type: 'fail' }])
+            setScanning(false)
+            return
+          }
 
           let done = 0
           let comp = 0
@@ -167,11 +190,14 @@ export default function Dashboard() {
 
           if (st.status === 'completed') {
             clearInterval(poll)
+            pollRef.current = null
+            scanIdRef.current = null
             setTerminalLines(prev => [...prev, { text: 'Audit completed. Generating security report...', type: 'pass' }])
             setTimeout(() => navigate(`/results/${res.scan_id}`), 800)
           }
         } catch { /* poll continues */ }
       }, 1200)
+      pollRef.current = poll
     } catch (err) {
       setTerminalLines(prev => [...prev, { text: `Error: ${err.message}`, type: 'fail' }])
       setScanning(false)
@@ -361,13 +387,21 @@ export default function Dashboard() {
                 className="space-y-4"
               >
                 <AttackFlow cycle={cycle} completed={completedScenarios} />
-                <div className="bg-black/40 rounded-full h-2 overflow-hidden border border-white/5">
-                  <motion.div
-                    className="h-full bg-gradient-to-r from-primary to-secondary rounded-full"
-                    initial={{ width: 0 }}
-                    animate={{ width: `${progress}%` }}
-                    transition={{ duration: 0.5 }}
-                  />
+                <div className="flex items-center gap-3">
+                  <div className="flex-1 bg-black/40 rounded-full h-2 overflow-hidden border border-white/5">
+                    <motion.div
+                      className="h-full bg-gradient-to-r from-primary to-secondary rounded-full"
+                      initial={{ width: 0 }}
+                      animate={{ width: `${progress}%` }}
+                      transition={{ duration: 0.5 }}
+                    />
+                  </div>
+                  <button
+                    onClick={handleCancel}
+                    className="px-3 py-1 text-[10px] font-medium text-danger border border-danger/30 rounded-full hover:bg-danger/10 transition-colors shrink-0"
+                  >
+                    Cancel
+                  </button>
                 </div>
                 <Terminal lines={terminalLines} />
               </motion.div>

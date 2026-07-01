@@ -44,6 +44,10 @@ class ScanRunner:
 
         all_results = {}
         for scenario_name in self.scenario_names:
+            self.db.refresh(self.scan)
+            if self.scan.status == "cancelled":
+                break
+
             scenario_class = SCENARIO_MAP[scenario_name]
             scenario = scenario_class()
             scenario_results = []
@@ -79,8 +83,11 @@ class ScanRunner:
                 scenario_results.append(passed)
 
             all_results[scenario_name] = scenario_results
+            self.db.commit()
 
-        self.db.commit()
+        self.db.refresh(self.scan)
+        if self.scan.status == "cancelled":
+            return
 
         score, owasp_breakdown = calculate_score(all_results)
         self.scan.score = score

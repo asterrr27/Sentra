@@ -81,6 +81,18 @@ def list_scans(db: Session = Depends(get_db)):
     ]
 
 
+@router.post("/{scan_id}/cancel")
+def cancel_scan(scan_id: int, db: Session = Depends(get_db)):
+    scan = db.query(Scan).filter(Scan.id == scan_id).first()
+    if not scan:
+        raise HTTPException(404, "Scan not found")
+    if scan.status not in ("queued", "running"):
+        raise HTTPException(400, f"Scan is '{scan.status}', cannot cancel")
+    scan.status = "cancelled"
+    db.commit()
+    return {"scan_id": scan.id, "status": "cancelled", "message": "Scan cancelled."}
+
+
 @router.get("/{scan_id}", response_model=ScanStatus)
 def get_scan_status(scan_id: int, db: Session = Depends(get_db)):
     scan = db.query(Scan).filter(Scan.id == scan_id).first()
