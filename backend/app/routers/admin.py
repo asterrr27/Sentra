@@ -1,9 +1,15 @@
 from fastapi import APIRouter, Depends, HTTPException
+from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from app.database import get_db
 from app.models import User, Scan
+from app.auth import hash_password
 from app.routers.auth import get_current_user
+
+
+class ResetPasswordRequest(BaseModel):
+    new_password: str
 
 router = APIRouter(prefix="/api/admin", tags=["admin"])
 
@@ -36,3 +42,15 @@ def get_stats(db: Session = Depends(get_db), _=Depends(require_admin)):
         "completed_scans": completed_scans,
         "average_score": round(avg_score, 1),
     }
+
+
+@router.post("/users/{user_id}/reset-password")
+def reset_password(user_id: int, req: ResetPasswordRequest, db: Session = Depends(get_db), _=Depends(require_admin)):
+    if len(req.new_password) < 4:
+        raise HTTPException(400, "Password must be at least 4 characters")
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(404, "User not found")
+    user.password_hash = hash_password(req.new_password)
+    db.commit()
+    return {"ok": True, "message": f"Password reset for {user.username}"}

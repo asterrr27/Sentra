@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import PageTransition from '../components/layout/PageTransition'
 import { useAuth } from '../context/AuthContext'
-import api from '../utils/api'
+import api, { resetUserPassword } from '../utils/api'
 
 export default function Admin() {
   const navigate = useNavigate()
@@ -12,6 +12,9 @@ export default function Admin() {
   const [stats, setStats] = useState(null)
   const [users, setUsers] = useState([])
   const [loading, setLoading] = useState(true)
+  const [resetUserId, setResetUserId] = useState(null)
+  const [resetPassword, setResetPassword] = useState('')
+  const [resetMsg, setResetMsg] = useState({})
 
   useEffect(() => {
     if (user && user.role !== 'admin') {
@@ -67,6 +70,7 @@ export default function Admin() {
                   <th className="text-left px-4 py-3">Email</th>
                   <th className="text-left px-4 py-3">Role</th>
                   <th className="text-left px-4 py-3">Created</th>
+                  <th className="text-left px-4 py-3">Action</th>
                 </tr>
               </thead>
               <tbody>
@@ -77,6 +81,36 @@ export default function Admin() {
                     <td className="px-4 py-3 text-white/50">{u.email}</td>
                     <td className="px-4 py-3"><span className={`text-xs px-2 py-0.5 rounded-full ${u.role === 'admin' ? 'bg-primary/20 text-primary' : 'bg-white/5 text-white/50'}`}>{u.role}</span></td>
                     <td className="px-4 py-3 text-white/30 text-xs">{u.created_at?.split('T')[0] || '-'}</td>
+                    <td className="px-4 py-3">
+                      {resetUserId === u.id ? (
+                        <div className="flex items-center gap-1">
+                          <input
+                            type="password"
+                            value={resetPassword}
+                            onChange={e => setResetPassword(e.target.value)}
+                            placeholder="New password"
+                            className="w-24 bg-white/5 border border-white/10 rounded px-2 py-1 text-[10px] text-white placeholder-white/20 focus:outline-none focus:border-primary/40"
+                          />
+                          <button
+                            onClick={async () => {
+                              if (!resetPassword) return
+                              try {
+                                await resetUserPassword(u.id, resetPassword)
+                                setResetMsg(p => ({...p, [u.id]: 'Done!'}))
+                              } catch { setResetMsg(p => ({...p, [u.id]: 'Failed'})) }
+                              setTimeout(() => { setResetMsg(p => ({...p, [u.id]: null})); setResetUserId(null); setResetPassword('') }, 2000)
+                            }}
+                            className="text-[10px] px-2 py-1 rounded bg-primary/20 text-primary hover:bg-primary/30"
+                          >Set</button>
+                          <button onClick={() => { setResetUserId(null); setResetPassword('') }} className="text-[10px] px-2 py-1 text-white/30 hover:text-white">✕</button>
+                        </div>
+                      ) : (
+                        <button
+                          onClick={() => { setResetUserId(u.id); setResetPassword(''); setResetMsg(p => ({...p, [u.id]: null})) }}
+                          className="text-[10px] text-white/30 hover:text-primary transition-colors"
+                        >{resetMsg[u.id] || 'Reset PW'}</button>
+                      )}
+                    </td>
                   </tr>
                 ))}
               </tbody>

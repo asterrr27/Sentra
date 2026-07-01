@@ -41,4 +41,8 @@ export function getAllPayloads() {
   return api.get('/payloads').then(r => r.data)
 }
 
+export function resetUserPassword(userId, newPassword) {
+  return api.post(`/admin/users/${userId}/reset-password`, { new_password: newPassword }).then(r => r.data)
+}
+
 export default api
