@@ -5,6 +5,18 @@ const api = axios.create({
   timeout: 15000,
 })
 
+api.interceptors.response.use(
+  r => r,
+  err => {
+    if (err.response?.status === 401) {
+      localStorage.removeItem('sentra_token')
+      delete api.defaults.headers.common['Authorization']
+      window.location.href = '/'
+    }
+    return Promise.reject(err)
+  },
+)
+
 export function createScan(data) {
   return api.post('/scans', data).then(r => r.data)
 }

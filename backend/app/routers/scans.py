@@ -3,16 +3,19 @@ import io
 import json
 from typing import Optional
 
-from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks
+from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks, Request
 from fastapi.responses import JSONResponse, StreamingResponse
 from sqlalchemy.orm import Session
 
 from fastapi.responses import Response
 
+from app.config import settings
 from app.database import get_db, SessionLocal
+from app.limiter import limiter
 from app.models import Scan, TestResult
 from app.schemas import ScanRequest, ScanResponse, ScanStatus
 from app.agents import get_connector
+from app.auth import get_current_user, CurrentUser
 from app.report_generator import generate_pdf
 from app.test_engine.runner import ScanRunner, ALL_SCENARIO_NAMES
 
@@ -38,7 +41,8 @@ def run_scan_in_background(scan_id: int, connector, scenario_names: Optional[lis
 
 
 @router.post("", response_model=ScanResponse)
-def create_scan(req: ScanRequest, background_tasks: BackgroundTasks, db: Session = Depends(get_db)):
+@limiter.limit(settings.RATE_LIMIT)
+def create_scan(request: Request, req: ScanRequest, background_tasks: BackgroundTasks, db: Session = Depends(get_db), user: CurrentUser = Depends(get_current_user)):
     scenario_names = req.scenarios or ALL_SCENARIO_NAMES
     for s in scenario_names:
         if s not in ALL_SCENARIO_NAMES:
@@ -75,7 +79,7 @@ def create_scan(req: ScanRequest, background_tasks: BackgroundTasks, db: Session
 
 
 @router.get("", response_model=list[ScanStatus])
-def list_scans(db: Session = Depends(get_db)):
+def list_scans(db: Session = Depends(get_db), user: CurrentUser = Depends(get_current_user)):
     scans = db.query(Scan).order_by(Scan.created_at.desc()).limit(20).all()
     return [
         ScanStatus(
@@ -89,7 +93,7 @@ def list_scans(db: Session = Depends(get_db)):
 
 
 @router.post("/{scan_id}/cancel")
-def cancel_scan(scan_id: int, db: Session = Depends(get_db)):
+def cancel_scan(scan_id: int, db: Session = Depends(get_db), user: CurrentUser = Depends(get_current_user)):
     scan = db.query(Scan).filter(Scan.id == scan_id).first()
     if not scan:
         raise HTTPException(404, "Scan not found")
@@ -101,7 +105,7 @@ def cancel_scan(scan_id: int, db: Session = Depends(get_db)):
 
 
 @router.get("/{scan_id}", response_model=ScanStatus)
-def get_scan_status(scan_id: int, db: Session = Depends(get_db)):
+def get_scan_status(scan_id: int, db: Session = Depends(get_db), user: CurrentUser = Depends(get_current_user)):
     scan = db.query(Scan).filter(Scan.id == scan_id).first()
     if not scan:
         raise HTTPException(404, "Scan not found")
@@ -115,7 +119,7 @@ def get_scan_status(scan_id: int, db: Session = Depends(get_db)):
 
 
 @router.get("/{scan_id}/results")
-def get_scan_results(scan_id: int, db: Session = Depends(get_db)):
+def get_scan_results(scan_id: int, db: Session = Depends(get_db), user: CurrentUser = Depends(get_current_user)):
     scan = db.query(Scan).filter(Scan.id == scan_id).first()
     if not scan:
         raise HTTPException(404, "Scan not found")
@@ -143,7 +147,7 @@ def get_scan_results(scan_id: int, db: Session = Depends(get_db)):
 
 
 @router.get("/{scan_id}/export")
-def export_scan(scan_id: int, db: Session = Depends(get_db)):
+def export_scan(scan_id: int, db: Session = Depends(get_db), user: CurrentUser = Depends(get_current_user)):
     scan = db.query(Scan).filter(Scan.id == scan_id).first()
     if not scan:
         raise HTTPException(404, "Scan not found")
@@ -176,7 +180,7 @@ def export_scan(scan_id: int, db: Session = Depends(get_db)):
 
 
 @router.get("/{scan_id}/export/pdf")
-def export_scan_pdf(scan_id: int, db: Session = Depends(get_db)):
+def export_scan_pdf(scan_id: int, db: Session = Depends(get_db), user: CurrentUser = Depends(get_current_user)):
     scan = db.query(Scan).filter(Scan.id == scan_id).first()
     if not scan:
         raise HTTPException(404, "Scan not found")
@@ -190,7 +194,7 @@ def export_scan_pdf(scan_id: int, db: Session = Depends(get_db)):
 
 
 @router.get("/{scan_id}/export/csv")
-def export_scan_csv(scan_id: int, db: Session = Depends(get_db)):
+def export_scan_csv(scan_id: int, db: Session = Depends(get_db), user: CurrentUser = Depends(get_current_user)):
     scan = db.query(Scan).filter(Scan.id == scan_id).first()
     if not scan:
         raise HTTPException(404, "Scan not found")

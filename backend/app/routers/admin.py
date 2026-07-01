@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 from app.database import get_db
 from app.models import User, Scan
 from app.auth import hash_password
-from app.routers.auth import get_current_user
+from app.auth import get_current_user, CurrentUser
 
 
 class ResetPasswordRequest(BaseModel):
@@ -14,8 +14,8 @@ class ResetPasswordRequest(BaseModel):
 router = APIRouter(prefix="/api/admin", tags=["admin"])
 
 
-def require_admin(current_user: dict = Depends(get_current_user)) -> dict:
-    if current_user["role"] != "admin":
+def require_admin(current_user: CurrentUser = Depends(get_current_user)) -> CurrentUser:
+    if current_user.role != "admin":
         raise HTTPException(403, "Admin access required")
     return current_user
 
