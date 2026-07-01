@@ -71,7 +71,7 @@ function deriveVulnerabilities(scenarios) {
   for (const [name, its] of Object.entries(scenarios)) {
     const passed = its.filter(i => i.passed).length
     const total = its.length
-    const failRate = 1 - (passed / total)
+    const failRate = total > 0 ? 1 - (passed / total) : 0
     if (failRate === 0) continue
     const severity = failRate >= 0.5 ? 'High' : failRate >= 0.2 ? 'Medium' : 'Low'
     const info = SCENARIO_VULN_INFO[name] || { description: 'Security vulnerability detected in scenario.', mitigation: 'Review agent configuration and security controls.' }
@@ -401,7 +401,7 @@ export default function Results() {
                 <div className="flex justify-between text-xs mb-1">
                   <span className="text-white/50">{cat}</span>
                   <span className={`font-bold ${score >= 80 ? 'text-success' : score >= 50 ? 'text-warning' : 'text-danger'}`}>
-                    {score.toFixed(1)}%
+                    {(Number(score) || 0).toFixed(1)}%
                   </span>
                 </div>
                 <div className="h-1.5 bg-white/5 rounded-full overflow-hidden">
