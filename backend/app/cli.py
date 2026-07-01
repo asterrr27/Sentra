@@ -10,7 +10,7 @@ import sys
 
 from app.database import SessionLocal, engine, Base
 from app.models import Scan
-from app.demo_agent.agent import DemoAgent
+from app.agents import get_connector
 from app.test_engine.runner import ScanRunner, ALL_SCENARIO_NAMES
 
 from rich.console import Console
@@ -45,7 +45,7 @@ def main():
     db.commit()
     db.refresh(scan)
 
-    agent = DemoAgent(system_prompt=args.system_prompt)
+    agent = get_connector("demo", {"system_prompt": args.system_prompt})
     runner = ScanRunner(db, scan, agent, scenario_names)
     runner.run()
 

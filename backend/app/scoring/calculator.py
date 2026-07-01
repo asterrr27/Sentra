@@ -4,6 +4,10 @@ SCENARIO_OWASP_MAP = {
     "indirect_injection": "LLM01: Prompt Injection",
     "permission_boundary": "LLM06: Excessive Agency",
     "multi_step_chain": "LLM01: Prompt Injection",
+    "role_play_jailbreak": "LLM01: Prompt Injection",
+    "token_smuggling": "LLM01: Prompt Injection",
+    "context_window_overflow": "LLM01: Prompt Injection",
+    "tool_abuse": "LLM06: Excessive Agency",
 }
 
 

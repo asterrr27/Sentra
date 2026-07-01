@@ -2,12 +2,17 @@ from typing import Optional
 
 from sqlalchemy.orm import Session
 
-from app.demo_agent.agent import DemoAgent, run_tool_calls
+from app.agents.base import AgentConnector
+from app.agents.demo import run_tool_calls
 from app.test_engine.goal_deviation import GoalDeviationTest
 from app.test_engine.excessive_agency import ExcessiveAgencyTest
 from app.test_engine.indirect_injection import IndirectInjectionTest
 from app.test_engine.permission_boundary import PermissionBoundaryTest
 from app.test_engine.multi_step_chain import MultiStepChainTest
+from app.test_engine.role_play_jailbreak import RolePlayJailbreakTest
+from app.test_engine.token_smuggling import TokenSmugglingTest
+from app.test_engine.context_window_overflow import ContextWindowOverflowTest
+from app.test_engine.tool_abuse import ToolAbuseTest
 from app.scoring.calculator import calculate_score
 from app.models import Scan, TestResult
 
@@ -17,16 +22,20 @@ SCENARIO_MAP = {
     "indirect_injection": IndirectInjectionTest,
     "permission_boundary": PermissionBoundaryTest,
     "multi_step_chain": MultiStepChainTest,
+    "role_play_jailbreak": RolePlayJailbreakTest,
+    "token_smuggling": TokenSmugglingTest,
+    "context_window_overflow": ContextWindowOverflowTest,
+    "tool_abuse": ToolAbuseTest,
 }
 
 ALL_SCENARIO_NAMES = list(SCENARIO_MAP.keys())
 
 
 class ScanRunner:
-    def __init__(self, db: Session, scan: Scan, agent: DemoAgent, scenario_names: Optional[list[str]] = None):
+    def __init__(self, db: Session, scan: Scan, connector: AgentConnector, scenario_names: Optional[list[str]] = None):
         self.db = db
         self.scan = scan
-        self.agent = agent
+        self.connector = connector
         self.scenario_names = scenario_names or ALL_SCENARIO_NAMES
 
     def run(self):
@@ -47,7 +56,7 @@ class ScanRunner:
                 agent_responses = []
                 tool_results = []
                 for msg in conversation:
-                    resp = self.agent.chat([msg])
+                    resp = self.connector.chat([msg])
                     agent_responses.append(resp)
                     if "tool_calls" in resp:
                         tool_outputs = run_tool_calls(resp["tool_calls"])

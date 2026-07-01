@@ -1,11 +1,12 @@
 services:
-  backend:
-    build: ./backend
+  sentra:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
     ports:
       - "8000:8000"
     volumes:
       - agent_data:/app/data
-      - ./backend:/app
     env_file:
       - ./backend/.env
     environment:

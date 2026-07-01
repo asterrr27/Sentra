@@ -10,6 +10,9 @@ class Scan(Base):
     __tablename__ = "scans"
 
     id = Column(Integer, primary_key=True, index=True)
+    provider = Column(String(20), default="demo")
+    model_name = Column(String(100), nullable=True)
+    webhook_url = Column(String(500), nullable=True)
     agent_type = Column(String(50), nullable=False)
     custom_webhook_url = Column(String(500), nullable=True)
     system_prompt = Column(Text, nullable=True)
@@ -20,6 +23,17 @@ class Scan(Base):
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
 
     results = relationship("TestResult", back_populates="scan", cascade="all, delete-orphan")
+
+
+class User(Base):
+    __tablename__ = "users"
+
+    id = Column(Integer, primary_key=True, index=True)
+    username = Column(String(50), unique=True, nullable=False, index=True)
+    email = Column(String(120), unique=True, nullable=False, index=True)
+    password_hash = Column(String(255), nullable=False)
+    role = Column(String(20), default="user")
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
 
 
 class TestResult(Base):

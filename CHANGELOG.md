@@ -1,70 +1,43 @@
 # Changelog
 
+## [2.1.0] - 2026-07-01
+### Added
+- 4 new attack types: role_play_jailbreak, token_smuggling, context_window_overflow, tool_abuse (5 payloads each)
+- User authentication: register/login/me endpoints with JWT + bcrypt
+- Login and Register pages with dark theme
+- Admin panel: stats endpoint, users endpoint, admin page with cards + user table
+- AuthContext, ProtectedRoute, admin badge in navbar
+- CSV export endpoint (`/api/scans/{id}/export/csv`) + export button on Results page
+- Compare button on Dashboard (select 2 scans → /compare page)
+- Shield monogram logo (hexagon + center dot) replacing S-curve
+- Category icons for all 9 scenarios on Payloads page
+- `agents/` package with base connector + demo connector
+
+### Fixed
+- Demo blank screen: `multi_step_chain` `payload_used` objects → strings
+- CLI import bug: `demo_agent.agent` → `agents.get_connector`
+- Demo animation shows 9/9 scenarios instead of 5/5
+- Removed dead `DEMO_RESULTS` + `get_demo_results()` endpoint
+- Frontend assets deployment cleaned up
+
+### Changed
+- Updated SCENARIO_LIST and SCENARIO_LABELS to 9 scenarios across Dashboard, Results, Demo, Payloads pages
+- Updated `payloads.py`, `runner.py`, `calculator.py` for 9 scenarios
+- `agent-auditor.7.jugaar.ai` decommissioned (default_server 444 drop)
+
+## [2.0.0] - 2026-06-30
+### Added
+- Complete rebrand to Sentra
+- React + Vite + Tailwind + Framer Motion frontend
+- Landing page with hero, trust stats, features, platform support
+- Dashboard with live AttackFlow visualization and terminal output
+- Results page with animated gauge, radar chart, vulnerability cards
+- Demo mode with simulated scan
+- Custom "S" monogram logo
+- Multi-stage Docker build
+
 ## [0.1.0] - 2026-06-30
 ### Added
 - Initial project scaffold
 - Project structure, config, database models, schemas
 - `.gitignore`, `CHANGELOG.md`, `README.md`
-
-## [0.2.0] - 2026-06-30
-### Added
-- Docker deployment with docker-compose
-- Nginx reverse proxy for agent-auditor.7.jugaar.ai
-- Fixed background task DB session handling
-
-
-## [1.0.0] - 2026-06-30
-### Added
-- All 5 attack scenarios working (goal_deviation, excessive_agency, indirect_injection, permission_boundary, multi_step_chain)
-- Fixed None content bug in mock agent
-- Template fix for None score comparison
-- HTTPS via Let's Encrypt for agent-auditor.7.jugaar.ai
-
-
-## [1.1.0] - 2026-06-30
-### Added
-- Dark theme UI with custom CSS (navy/teal/purple palette)
-- Animated SVG score gauge on results page
-- Light/dark theme toggle persisted in localStorage
-- Skeleton loaders during scan progress
-- Scan filter/search on dashboard
-- Auto-poll for scan completion with redirect
-- Re-run scan button on results page
-- Share results link button
-- Payload library  Test This Scenario quick-action
-- Hover tooltips on OWASP categories
-- Fade-in animations throughout
-- Custom scrollbars
-
-## [1.2.0] - 2026-06-30
-### Added
-- Enhanced dark theme with better contrast (--text-muted improved)
-- Glassmorphism cards with backdrop blur + gradient left borders
-- Animated status dots (pulsing green, spinning orange) replacing text badges
-- Toast notification system replacing alert() popups
-- Keyboard shortcuts: ⌘D → Dashboard, ⌘P → Payloads, Escape → dismiss toasts
-- Live per-scenario progress counter during scan (shows X/Y tests completed)
-- Empty state illustration for first-time users
-- Nav link glow effect on hover
-- Score chart with gradient fill and hover interaction
-- Print-friendly CSS stylesheet
-- Hover tooltips on OWASP categories
-- Copy payload toast feedback
-- Form labels now use full-contrast color
-- Gradient on primary buttons
-
-## [1.3.0] - 2026-06-30
-### Added
-- Ripple click effect on all buttons
-- 3D card tilt on mouse hover (perspective rotation)
-- Magnetic button effect (button follows cursor)
-- Staggered scale-in entrance animations on all cards
-- Fade-up entrance on lazy-loaded elements
-- Page transition fade overlay between navigation
-- Animated gradient shimmer on card left borders
-- Score count-up animation (0 → final with cubic easing)
-- Gauge overshoot bounce via cubic-bezier timing
-- Subtle dot grid background pattern
-- Gradient text on headers and key values
-- Content shuffle slide transition on table filter
-- Chart.js animation enabled with easeOutQuart
