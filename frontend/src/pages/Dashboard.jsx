@@ -226,8 +226,11 @@ export default function Dashboard() {
             pollRef.current = null
             scanIdRef.current = null
             lastProgressRef.current = Date.now()
+            setScanning(false)
             setTerminalLines(prev => [...prev, { text: 'Audit completed. Generating security report...', type: 'pass' }])
-            navigateRef.current = setTimeout(() => navigate(`/results/${res.scan_id}`), 800)
+            navigateRef.current = setTimeout(() => {
+              if (mountedRef.current) navigate(`/results/${res.scan_id}`)
+            }, 800)
           }
         } catch (err) {
           console.error('Poll error:', err)

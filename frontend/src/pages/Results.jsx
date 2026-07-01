@@ -146,6 +146,7 @@ export default function Results() {
   const navigate = useNavigate()
   const [data, setData] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [loadingTimedOut, setLoadingTimedOut] = useState(false)
   const [exportMsg, setExportMsg] = useState('')
   const cancelledRef = useRef(false)
 
@@ -156,6 +157,11 @@ export default function Results() {
       setExportMsg('Cancel failed')
     }
   }
+
+  useEffect(() => {
+    const t = setTimeout(() => { if (!cancelledRef.current) setLoadingTimedOut(true) }, 15000)
+    return () => clearTimeout(t)
+  }, [id])
 
   useEffect(() => {
     if (id === 'demo') {
@@ -205,6 +211,21 @@ export default function Results() {
       if (timer) clearTimeout(timer)
     }
   }, [id])
+
+  if (loading && loadingTimedOut) {
+    return (
+      <PageTransition>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-12 text-center">
+          <div className="text-4xl mb-4 opacity-30">⏰</div>
+          <h2 className="text-xl font-bold mb-2">Timed Out</h2>
+          <p className="text-white/40 mb-6">The scan results took too long to load. The backend might be busy or unavailable.</p>
+          <button onClick={() => window.location.reload()} className="px-6 py-2.5 text-sm font-semibold text-[#09090B] bg-gradient-to-r from-primary to-secondary rounded-full hover:shadow-lg hover:shadow-primary/20 transition-all">
+            Reload
+          </button>
+        </div>
+      </PageTransition>
+    )
+  }
 
   if (loading) {
     return (
