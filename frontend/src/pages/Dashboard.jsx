@@ -56,12 +56,19 @@ export default function Dashboard() {
   const chartInstance = useRef(null)
   const scanIdRef = useRef(null)
   const pollRef = useRef(null)
+  const navigateRef = useRef(null)
+  const lastProgressRef = useRef(Date.now())
 
   useEffect(() => {
+    listScans().then(r => setScans(r)).catch(() => setFetchError('Failed to load scan history'))
     return () => {
       if (pollRef.current) {
         clearInterval(pollRef.current)
         pollRef.current = null
+      }
+      if (navigateRef.current) {
+        clearTimeout(navigateRef.current)
+        navigateRef.current = null
       }
     }
   }, [])
@@ -166,6 +173,14 @@ export default function Dashboard() {
       let pollCycle = 0
 
       const poll = setInterval(async () => {
+        if (Date.now() - lastProgressRef.current > 30000) {
+          clearInterval(poll)
+          pollRef.current = null
+          setScanning(false)
+          setTerminalLines(prev => [...prev, { text: 'Scan appears stuck (30s without progress). Check backend logs.', type: 'warn' }])
+          return
+        }
+
         try {
           const st = await getScanStatus(res.scan_id)
           const detail = await getScanResults(res.scan_id)
@@ -201,16 +216,24 @@ export default function Dashboard() {
             }
             lastCompleted = comp
             setCompletedScenarios(comp)
+            lastProgressRef.current = Date.now()
           }
 
           if (st.status === 'completed') {
             clearInterval(poll)
             pollRef.current = null
             scanIdRef.current = null
+            lastProgressRef.current = Date.now()
             setTerminalLines(prev => [...prev, { text: 'Audit completed. Generating security report...', type: 'pass' }])
-            setTimeout(() => navigate(`/results/${res.scan_id}`), 800)
+            navigateRef.current = setTimeout(() => navigate(`/results/${res.scan_id}`), 800)
           }
-        } catch { /* poll continues */ }
+        } catch (err) {
+          console.error('Poll error:', err)
+          clearInterval(poll)
+          pollRef.current = null
+          setScanning(false)
+          setTerminalLines(prev => [...prev, { text: `Poll error: ${err.message}`, type: 'fail' }])
+        }
       }, 1200)
       pollRef.current = poll
     } catch (err) {

@@ -23,4 +23,5 @@ class ScanStatus(BaseModel):
     scan_id: int
     status: str
     score: Optional[float] = None
+    agent_type: Optional[str] = None
     progress: str

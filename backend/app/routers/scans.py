@@ -29,12 +29,6 @@ def run_scan_in_background(scan_id: int, connector, scenario_names: Optional[lis
             return
         runner = ScanRunner(db, scan, connector, scenario_names)
         runner.run()
-    except Exception:
-        db.rollback()
-        scan = db.query(Scan).filter(Scan.id == scan_id).first()
-        if scan:
-            scan.status = "failed"
-            db.commit()
     finally:
         db.close()
 
@@ -85,6 +79,7 @@ def list_scans(db: Session = Depends(get_db), user: CurrentUser = Depends(get_cu
             scan_id=s.id,
             status=s.status,
             score=s.score,
+            agent_type=s.agent_type,
             progress=f"{s.status}"
         )
         for s in scans
@@ -113,6 +108,7 @@ def get_scan_status(scan_id: int, db: Session = Depends(get_db), user: CurrentUs
         scan_id=scan.id,
         status=scan.status,
         score=scan.score,
+        agent_type=scan.agent_type,
         progress=f"{total} results recorded",
     )
 
