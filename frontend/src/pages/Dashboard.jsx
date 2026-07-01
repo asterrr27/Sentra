@@ -58,10 +58,12 @@ export default function Dashboard() {
   const pollRef = useRef(null)
   const navigateRef = useRef(null)
   const lastProgressRef = useRef(Date.now())
+  const mountedRef = useRef(true)
 
   useEffect(() => {
-    listScans().then(r => setScans(r)).catch(() => setFetchError('Failed to load scan history'))
+    listScans().then(r => { if (mountedRef.current) setScans(r) }).catch(() => { if (mountedRef.current) setFetchError('Failed to load scan history') })
     return () => {
+      mountedRef.current = false
       if (pollRef.current) {
         clearInterval(pollRef.current)
         pollRef.current = null

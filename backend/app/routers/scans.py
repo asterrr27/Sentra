@@ -29,6 +29,11 @@ def run_scan_in_background(scan_id: int, connector, scenario_names: Optional[lis
             return
         runner = ScanRunner(db, scan, connector, scenario_names)
         runner.run()
+    except Exception:
+        scan = db.query(Scan).filter(Scan.id == scan_id).first()
+        if scan:
+            scan.status = "failed"
+            db.commit()
     finally:
         db.close()
 
