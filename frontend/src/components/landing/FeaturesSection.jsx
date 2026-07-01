@@ -19,7 +19,7 @@ const FEATURES = [
   {
     icon: '📄',
     title: 'Professional Reports',
-    desc: 'Generate beautiful PDF and JSON reports with attack details, evidence, and mitigation steps.',
+    desc: 'Generate detailed PDF and CSV reports with attack evidence and actionable mitigation steps.',
   },
 ]
 
