@@ -9,7 +9,7 @@ const FEATURES = [
   {
     icon: '⚡',
     title: 'Automatic Attack Engine',
-    desc: 'Run 5 types of AI security attacks including prompt injection, jailbreak, memory manipulation, and more.',
+    desc: 'Run 9 types of AI security attacks including prompt injection, role-play jailbreak, token smuggling, and more.',
   },
   {
     icon: '📊',
