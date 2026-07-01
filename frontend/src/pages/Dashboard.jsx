@@ -117,6 +117,14 @@ export default function Dashboard() {
       setTerminalLines(prev => [...prev, { text: 'Scan cancelled by user.', type: 'fail' }])
       setScanning(false)
       scanIdRef.current = null
+      listScans().then(setScans).catch(() => {})
+    } catch { /* ignore */ }
+  }, [])
+
+  const handleCancelFromTable = useCallback(async (scanId) => {
+    try {
+      await cancelScan(scanId)
+      listScans().then(setScans).catch(() => {})
     } catch { /* ignore */ }
   }, [])
 
@@ -494,10 +502,11 @@ export default function Dashboard() {
                             <td className="py-3 pr-4">
                               <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-medium ${
                                 scan.status === 'completed' ? 'bg-success/10 text-success' :
-                                scan.status === 'running' ? 'bg-warning/10 text-warning' :
+                                scan.status === 'running' || scan.status === 'queued' ? 'bg-warning/10 text-warning' :
+                                scan.status === 'cancelled' ? 'bg-danger/10 text-danger' :
                                 'bg-white/5 text-white/30'
                               }`}>
-                                <span className={`w-1.5 h-1.5 rounded-full ${scan.status === 'completed' ? 'bg-success' : scan.status === 'running' ? 'bg-warning animate-pulse' : 'bg-white/20'}`} />
+                                <span className={`w-1.5 h-1.5 rounded-full ${scan.status === 'completed' ? 'bg-success' : scan.status === 'running' || scan.status === 'queued' ? 'bg-warning animate-pulse' : scan.status === 'cancelled' ? 'bg-danger' : 'bg-white/20'}`} />
                                 {scan.status}
                               </span>
                             </td>
@@ -508,6 +517,14 @@ export default function Dashboard() {
                                   className="text-xs text-primary/70 hover:text-primary transition-colors"
                                 >
                                   View →
+                                </button>
+                              )}
+                              {(scan.status === 'running' || scan.status === 'queued') && (
+                                <button
+                                  onClick={() => handleCancelFromTable(scan.scan_id)}
+                                  className="text-xs text-danger/70 hover:text-danger transition-colors"
+                                >
+                                  Cancel
                                 </button>
                               )}
                             </td>
