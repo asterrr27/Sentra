@@ -51,13 +51,21 @@ export default function Dashboard() {
   const [cycle, setCycle] = useState(0)
   const [scans, setScans] = useState([])
   const [compareIds, setCompareIds] = useState([])
+  const [fetchError, setFetchError] = useState('')
+  const mountedRef = useRef(true)
   const chartRef = useRef(null)
   const chartInstance = useRef(null)
   const scanIdRef = useRef(null)
   const pollRef = useRef(null)
 
   useEffect(() => {
-    listScans().then(setScans).catch(() => {})
+    return () => {
+      mountedRef.current = false
+      if (pollRef.current) {
+        clearInterval(pollRef.current)
+        pollRef.current = null
+      }
+    }
   }, [])
 
   useEffect(() => {
@@ -116,14 +124,16 @@ export default function Dashboard() {
       setTerminalLines(prev => [...prev, { text: 'Scan cancelled by user.', type: 'fail' }])
       setScanning(false)
       scanIdRef.current = null
-      listScans().then(setScans).catch(() => {})
-    } catch { /* ignore */ }
+      listScans().then(r => setScans(r)).catch(() => {})
+    } catch (err) {
+      setTerminalLines(prev => [...prev, { text: `Cancel failed: ${err.message || 'Unknown error'}`, type: 'fail' }])
+    }
   }, [])
 
   const handleCancelFromTable = useCallback(async (scanId) => {
     try {
       await cancelScan(scanId)
-      listScans().then(setScans).catch(() => {})
+      listScans().then(r => setScans(r)).catch(() => {})
     } catch { /* ignore */ }
   }, [])
 
@@ -154,7 +164,7 @@ export default function Dashboard() {
       setTerminalLines(prev => [...prev, { text: 'Initializing attack engine...', type: 'info' }])
       setTerminalLines(prev => [...prev, { text: `Scan #${res.scan_id} queued. Running ${totalIterations} tests...`, type: 'info' }])
 
-      let lastCompleted = -1
+      let lastCompleted = 0
       let pollCycle = 0
 
       const poll = setInterval(async () => {
@@ -174,7 +184,7 @@ export default function Dashboard() {
           let done = 0
           let comp = 0
           if (detail.scenarios) {
-            for (const [sname, its] of Object.entries(detail.scenarios)) {
+            for (const its of Object.values(detail.scenarios)) {
               done += its.length
               if (its.length === iterations) comp++
             }
@@ -184,8 +194,8 @@ export default function Dashboard() {
           setProgress(pct)
           setCycle(pollCycle++)
           if (comp > lastCompleted) {
-            for (let i = lastCompleted + 1; i <= comp; i++) {
-              const sname = scenarioList[i - 1]
+            for (let i = lastCompleted; i < comp; i++) {
+              const sname = scenarioList[i]
               setTerminalLines(prev => [...prev, {
                 text: `Scenario: ${SCENARIO_LABELS[sname] || sname} — ${iterations}/${iterations} tests complete`,
                 type: 'pass',
@@ -378,7 +388,7 @@ export default function Dashboard() {
 
                 <button
                   onClick={startScan}
-                  disabled={scanning || (provider !== 'demo' && !agentUrl && !apiKey)}
+                  disabled={scanning || (provider !== 'demo' && provider !== 'openai' && provider !== 'anthropic' && !agentUrl) || ((provider === 'openai' || provider === 'anthropic') && !apiKey)}
                   className="w-full py-3 text-sm font-semibold text-[#09090B] bg-gradient-to-r from-primary to-secondary rounded-full hover:shadow-lg hover:shadow-primary/20 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {scanning ? 'Scanning...' : 'Start Security Audit'}
@@ -453,7 +463,13 @@ export default function Dashboard() {
                 )}
               </div>
               <div className="p-4">
-                {scans.length === 0 ? (
+                {fetchError ? (
+                  <div className="text-center py-8">
+                    <div className="text-3xl mb-3 opacity-30">⚠️</div>
+                    <p className="text-sm text-danger">{fetchError}</p>
+                    <p className="text-xs text-white/20 mt-1">Refresh the page to try again</p>
+                  </div>
+                ) : scans.length === 0 ? (
                   <div className="text-center py-8">
                     <div className="text-3xl mb-3 opacity-30">🛡️</div>
                     <p className="text-sm text-white/40">No audits yet</p>

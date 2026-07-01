@@ -12,7 +12,7 @@ class OpenAIConnector(AgentConnector):
 
     def chat(self, messages: list[dict]) -> dict:
         if not self.api_key:
-            return {"role": "assistant", "content": "[Error: No API key provided]"}
+            raise ValueError("[Error: No API key provided]")
 
         full_messages = []
         if self.system_prompt:

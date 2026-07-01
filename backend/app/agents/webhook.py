@@ -28,10 +28,12 @@ class WebhookConnector(AgentConnector):
                 resp.raise_for_status()
                 data = resp.json()
 
-                return {
-                    "role": "assistant",
-                    "content": data.get("content", str(data)),
-                    "tool_calls": data.get("tool_calls", []),
-                }
+                if isinstance(data, dict):
+                    return {
+                        "role": "assistant",
+                        "content": data.get("content", str(data)),
+                        "tool_calls": data.get("tool_calls", []),
+                    }
+                return {"role": "assistant", "content": str(data), "tool_calls": []}
         except Exception as e:
             return {"role": "assistant", "content": f"[Webhook Error: {e}]"}

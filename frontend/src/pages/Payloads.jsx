@@ -18,10 +18,11 @@ const ICONS = {
 
 export default function Payloads() {
   const [payloads, setPayloads] = useState({})
+  const [error, setError] = useState('')
   const [copied, setCopied] = useState(null)
 
   useEffect(() => {
-    getAllPayloads().then(setPayloads).catch(() => {})
+    getAllPayloads().then(r => { setPayloads(r); setError('') }).catch(() => setError('Failed to load payloads'))
   }, [])
 
   const copyPayload = (text, key) => {
@@ -44,10 +45,15 @@ export default function Payloads() {
           <Link to="/dashboard" className="text-xs text-white/30 hover:text-white transition-colors">&larr; Dashboard</Link>
         </div>
 
-        {entries.length === 0 ? (
+        {error ? (
+          <div className="text-center py-16">
+            <div className="text-3xl mb-3 opacity-30">⚠️</div>
+            <p className="text-sm text-danger">{error}</p>
+          </div>
+        ) : entries.length === 0 ? (
           <div className="text-center py-16">
             <div className="text-3xl mb-3 opacity-30">📚</div>
-            <p className="text-sm text-white/40">No payloads available. Run a scan to generate payload data.</p>
+            <p className="text-sm text-white/40">No payloads available.</p>
           </div>
         ) : (
           <div className="space-y-6">
@@ -67,27 +73,23 @@ export default function Payloads() {
                   <span className="text-[10px] text-white/30">{payloadList.length} payloads</span>
                 </div>
                 <div className="divide-y divide-white/5">
-                  {payloadList.map((payload, j) => {
-                    const key = `${scenario}-${j}`
-                    const text = typeof payload === 'string' ? payload : payload.steps?.join('\n') || JSON.stringify(payload)
-                    return (
-                      <div key={j} className="p-4 flex items-start gap-4">
-                        <div className="flex-1 min-w-0">
-                          <div className="font-mono text-[11px] text-white/60 bg-black/30 rounded-lg p-3 break-all leading-relaxed">
-                            {typeof payload === 'string' ? payload : (
-                              payload.steps ? payload.steps.map((s, k) => <div key={k}>📌 {s}</div>) : JSON.stringify(payload)
-                            )}
-                          </div>
+                  {payloadList.map((payload, j) => (
+                    <div key={`${scenario}-${j}`} className="p-4 flex items-start gap-4">
+                      <div className="flex-1 min-w-0">
+                        <div className="font-mono text-[11px] text-white/60 bg-black/30 rounded-lg p-3 break-all leading-relaxed">
+                          {typeof payload === 'string' ? payload : (
+                            payload.steps ? payload.steps.map((s, k) => <div key={`${scenario}-${j}-${k}`}>📌 {s}</div>) : JSON.stringify(payload)
+                          )}
                         </div>
-                        <button
-                          onClick={() => copyPayload(payload, key)}
-                          className="shrink-0 px-3 py-1.5 text-[10px] font-medium text-white/50 border border-white/10 rounded-lg hover:border-primary/30 hover:text-primary transition-all"
-                        >
-                          {copied === key ? 'Copied!' : 'Copy'}
-                        </button>
                       </div>
-                    )
-                  })}
+                      <button
+                        onClick={() => copyPayload(payload, `${scenario}-${j}`)}
+                        className="shrink-0 px-3 py-1.5 text-[10px] font-medium text-white/50 border border-white/10 rounded-lg hover:border-primary/30 hover:text-primary transition-all"
+                      >
+                        {copied === `${scenario}-${j}` ? 'Copied!' : 'Copy'}
+                      </button>
+                    </div>
+                  ))}
                 </div>
               </motion.div>
             ))}

@@ -32,7 +32,7 @@ class ToolAbuseTest(Scenario):
                     args_str = fn.get("arguments", "{}")
                     try:
                         args = json.loads(args_str)
-                    except Exception:
+                    except (json.JSONDecodeError, TypeError):
                         args = {}
                     path = args.get("path", "")
                     if ".." in path:

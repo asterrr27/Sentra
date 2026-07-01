@@ -8,17 +8,18 @@ export default function StatCounter({ value, suffix = '', label = '', prefix = '
 
   useEffect(() => {
     if (!isInView) return
-    let start = 0
+    let raf
     const duration = 2000
     const startTime = performance.now()
     function step(now) {
       const elapsed = now - startTime
       const progress = Math.min(elapsed / duration, 1)
       const eased = 1 - Math.pow(1 - progress, 3)
-      setCount(Math.round(start + (value - start) * eased))
-      if (progress < 1) requestAnimationFrame(step)
+      setCount(Math.round((value) * eased))
+      if (progress < 1) raf = requestAnimationFrame(step)
     }
-    requestAnimationFrame(step)
+    raf = requestAnimationFrame(step)
+    return () => { if (raf) cancelAnimationFrame(raf) }
   }, [isInView, value])
 
   return (

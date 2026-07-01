@@ -14,6 +14,7 @@ export function AuthProvider({ children }) {
     api.get('/auth/me').then(r => setUser(r.data)).catch(() => {
       localStorage.removeItem('sentra_token')
       delete api.defaults.headers.common['Authorization']
+      console.warn('Auth check failed — logged out')
     }).finally(() => setLoading(false))
   }, [])
 

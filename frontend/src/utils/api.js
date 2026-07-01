@@ -26,7 +26,7 @@ export function listScans() {
 }
 
 export function exportScan(id) {
-  return api.get(`/scans/${id}/export`).then(r => r.data)
+  return api.get(`/scans/${id}/export`, { responseType: 'blob' }).then(r => r.data)
 }
 
 export function exportScanPdf(id) {

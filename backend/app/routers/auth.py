@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, Header
-from pydantic import BaseModel
+from pydantic import BaseModel, EmailStr, field_validator
 from sqlalchemy.orm import Session
 
 from app.database import get_db
@@ -11,8 +11,22 @@ router = APIRouter(prefix="/api/auth", tags=["auth"])
 
 class RegisterRequest(BaseModel):
     username: str
-    email: str
+    email: EmailStr
     password: str
+
+    @field_validator("username")
+    @classmethod
+    def username_length(cls, v):
+        if len(v) < 3 or len(v) > 50:
+            raise ValueError("Username must be between 3 and 50 characters")
+        return v
+
+    @field_validator("password")
+    @classmethod
+    def password_strength(cls, v):
+        if len(v) < 8:
+            raise ValueError("Password must be at least 8 characters")
+        return v
 
 
 class LoginRequest(BaseModel):
@@ -48,7 +62,11 @@ def get_current_user(
     user_id = payload.get("sub")
     if not user_id:
         raise HTTPException(401, "Invalid token payload")
-    user = db.query(User).filter(User.id == int(user_id)).first()
+    try:
+        user_id_int = int(user_id)
+    except ValueError:
+        raise HTTPException(401, "Invalid token payload")
+    user = db.query(User).filter(User.id == user_id_int).first()
     if not user:
         raise HTTPException(401, "User not found")
     return {"id": user.id, "username": user.username, "email": user.email, "role": user.role}

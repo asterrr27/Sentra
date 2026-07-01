@@ -5,7 +5,7 @@ from jose import JWTError, jwt
 
 from app.config import settings
 
-SECRET_KEY = settings.OPENAI_API_KEY or "sentra-jwt-secret-key-change-in-prod"
+SECRET_KEY = settings.JWT_SECRET
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24
 

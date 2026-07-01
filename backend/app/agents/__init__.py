@@ -12,4 +12,6 @@ def get_connector(provider: str, config: dict) -> AgentConnector:
         return AnthropicConnector(config)
     if provider == "webhook":
         return WebhookConnector(config)
-    return DemoConnector(config)
+    if provider == "demo":
+        return DemoConnector(config)
+    raise ValueError(f"Unknown provider: {provider}")

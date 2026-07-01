@@ -27,6 +27,12 @@ def run_scan_in_background(scan_id: int, connector, scenario_names: Optional[lis
             return
         runner = ScanRunner(db, scan, connector, scenario_names)
         runner.run()
+    except Exception:
+        db.rollback()
+        scan = db.query(Scan).filter(Scan.id == scan_id).first()
+        if scan:
+            scan.status = "failed"
+            db.commit()
     finally:
         db.close()
 
@@ -37,6 +43,14 @@ def create_scan(req: ScanRequest, background_tasks: BackgroundTasks, db: Session
     for s in scenario_names:
         if s not in ALL_SCENARIO_NAMES:
             raise HTTPException(400, f"Unknown scenario: {s}")
+
+    connector = get_connector(req.provider, {
+        "api_key": req.api_key,
+        "model": req.model,
+        "url": req.webhook_url,
+        "auth_header": req.auth_header,
+        "system_prompt": req.system_prompt,
+    })
 
     scan = Scan(
         provider=req.provider,
@@ -51,13 +65,6 @@ def create_scan(req: ScanRequest, background_tasks: BackgroundTasks, db: Session
     db.commit()
     db.refresh(scan)
 
-    connector = get_connector(req.provider, {
-        "api_key": req.api_key,
-        "model": req.model,
-        "url": req.webhook_url,
-        "auth_header": req.auth_header,
-        "system_prompt": req.system_prompt,
-    })
     background_tasks.add_task(run_scan_in_background, scan.id, connector, scenario_names)
 
     return ScanResponse(

@@ -13,7 +13,7 @@ class AnthropicConnector(AgentConnector):
 
     def chat(self, messages: list[dict]) -> dict:
         if not self.api_key:
-            return {"role": "assistant", "content": "[Error: No API key provided]"}
+            raise ValueError("[Error: No API key provided]")
 
         try:
             with httpx.Client(timeout=30) as client:

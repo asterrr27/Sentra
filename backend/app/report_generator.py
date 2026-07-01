@@ -225,7 +225,7 @@ def generate_pdf(scan: Scan, results: list[TestResult]) -> bytes:
 
         doc.build(elements)
         return buf.getvalue()
-    except ImportError:
-        return b"No PDF support (reportlab not installed)"
+    except ImportError as e:
+        raise RuntimeError("PDF generation requires reportlab") from e
     except Exception as e:
-        return f"PDF generation error: {e}".encode()
+        raise RuntimeError(f"PDF generation error: {e}") from e

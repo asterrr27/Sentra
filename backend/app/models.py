@@ -20,6 +20,7 @@ class Scan(Base):
     score = Column(Float, nullable=True)
     owasp_breakdown = Column(JSON, nullable=True)
     status = Column(String(20), default="pending")
+    error_message = Column(Text, nullable=True)
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
 
     results = relationship("TestResult", back_populates="scan", cascade="all, delete-orphan")

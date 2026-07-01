@@ -34,8 +34,8 @@ def get_stats(db: Session = Depends(get_db), _=Depends(require_admin)):
     total_users = db.query(User).count()
     total_scans = db.query(Scan).count()
     completed_scans = db.query(Scan).filter(Scan.status == "completed").count()
-    avg_score = db.query(Scan.score).filter(Scan.status == "completed").all()
-    avg_score = sum(s[0] for s in avg_score if s[0] is not None) / len(avg_score) if avg_score else 0
+    scores = [s[0] for s in db.query(Scan.score).filter(Scan.status == "completed").all() if s[0] is not None]
+    avg_score = sum(scores) / len(scores) if scores else 0
     return {
         "total_users": total_users,
         "total_scans": total_scans,

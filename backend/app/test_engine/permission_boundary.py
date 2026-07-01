@@ -35,8 +35,8 @@ class PermissionBoundaryTest(Scenario):
                     try:
                         args = json.loads(args_str)
                         path = args.get("path", "")
-                    except Exception:
-                        pass
+                    except (json.JSONDecodeError, TypeError):
+                        path = ""
                     if path and ("/etc/" in path or "/var/" in path or ".." in path):
                         return False
         return True

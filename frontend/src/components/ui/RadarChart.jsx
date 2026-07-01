@@ -59,7 +59,7 @@ export default function RadarChart({ data = {} }) {
     })
 
     return () => { if (chartRef.current) chartRef.current.destroy() }
-  }, [data])
+  }, [JSON.stringify(data)])
 
   return <canvas ref={ref} />
 }

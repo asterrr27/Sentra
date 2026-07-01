@@ -12,6 +12,7 @@ export default function Admin() {
   const [stats, setStats] = useState(null)
   const [users, setUsers] = useState([])
   const [loading, setLoading] = useState(true)
+  const [adminError, setAdminError] = useState('')
   const [resetUserId, setResetUserId] = useState(null)
   const [resetPassword, setResetPassword] = useState('')
   const [resetMsg, setResetMsg] = useState({})
@@ -22,9 +23,10 @@ export default function Admin() {
       return
     }
     setLoading(true)
+    setAdminError('')
     Promise.all([
-      api.get('/admin/stats').then(r => setStats(r.data)).catch(() => {}),
-      api.get('/admin/users').then(r => setUsers(r.data)).catch(() => {}),
+      api.get('/admin/stats').then(r => setStats(r.data)).catch(() => setAdminError('Failed to load stats')),
+      api.get('/admin/users').then(r => setUsers(r.data)).catch(() => setAdminError('Failed to load users')),
     ]).finally(() => setLoading(false))
   }, [user, navigate])
 
@@ -60,6 +62,11 @@ export default function Admin() {
           <button onClick={() => setTab('users')} className={`px-4 py-2 text-sm rounded-lg ${tab === 'users' ? 'bg-primary/20 text-primary' : 'text-white/50 hover:text-white'}`}>Users</button>
         </div>
 
+        {adminError && (
+          <div className="mb-6 p-4 bg-danger/10 border border-danger/20 rounded-lg text-sm text-danger text-center">
+            {adminError}
+          </div>
+        )}
         {tab === 'stats' && stats && (
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {[

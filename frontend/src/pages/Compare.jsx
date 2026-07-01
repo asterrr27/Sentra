@@ -49,7 +49,7 @@ export default function Compare() {
         <p className="text-sm text-white/30">Paste a scan ID to compare</p>
       </div>
     )
-    const score = data.score || 0
+    const score = data.score ?? 0
     return (
       <div className={`glass-card p-6 ${score >= 80 ? 'ring-1 ring-success/20' : score >= 50 ? 'ring-1 ring-warning/20' : 'ring-1 ring-danger/20'}`}>
         <div className="text-center mb-6">
@@ -83,7 +83,7 @@ export default function Compare() {
             })}
           </tbody>
         </table>
-        <Link to={`/results/${data.scan_id}`} className="mt-4 block text-center text-xs text-primary/60 hover:text-primary transition-colors">
+        <Link to={`/results/${data.scan_id ?? ''}`} className="mt-4 block text-center text-xs text-primary/60 hover:text-primary transition-colors">
           View Full Report →
         </Link>
       </div>

@@ -5,6 +5,7 @@ class Settings(BaseSettings):
     DATABASE_URL: str = "sqlite:///./agent_auditor.db"
     OPENAI_API_KEY: str = ""
     OPENAI_MODEL: str = "gpt-4o-mini"
+    JWT_SECRET: str = "sentra-jwt-secret-key-change-in-prod"
     RATE_LIMIT: str = "10/minute"
     CUSTOM_AGENT_TIMEOUT: int = 15
 

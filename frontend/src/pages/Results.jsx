@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import PageTransition from '../components/layout/PageTransition'
@@ -147,11 +147,14 @@ export default function Results() {
   const [data, setData] = useState(null)
   const [loading, setLoading] = useState(true)
   const [exportMsg, setExportMsg] = useState('')
+  const cancelledRef = useRef(false)
 
   const handleCancel = async () => {
     try {
       await cancelScan(Number(id))
-    } catch { /* ignore */ }
+    } catch {
+      setExportMsg('Cancel failed')
+    }
   }
 
   useEffect(() => {
@@ -160,46 +163,47 @@ export default function Results() {
       return
     }
 
-    let cancelled = false
+    let timer
 
     const poll = async () => {
       try {
         const st = await getScanStatus(Number(id))
-        if (cancelled) return
+        if (cancelledRef.current) return
 
         if (st.status === 'completed' || st.status === 'cancelled') {
           const d = await getScanResults(Number(id))
-          if (!cancelled) { setData(d); setLoading(false) }
+          if (!cancelledRef.current) { setData(d); setLoading(false) }
           return
         }
 
-        // still running — poll after delay
         const d = await getScanResults(Number(id))
-        if (!cancelled) { setData(d); setLoading(false) }
+        if (!cancelledRef.current) { setData(d); setLoading(false) }
 
         if (st.status === 'running' || st.status === 'queued') {
-          setTimeout(poll, 2000)
+          timer = setTimeout(poll, 2000)
         }
       } catch {
-        if (!cancelled) {
-          setTimeout(poll, 2000)
+        if (!cancelledRef.current) {
+          timer = setTimeout(poll, 2000)
         }
       }
     }
 
-    // initial fetch
     getScanResults(Number(id)).then(d => {
-      if (cancelled) return
+      if (cancelledRef.current) return
       setData(d)
       setLoading(false)
       if (d.status === 'running' || d.status === 'queued') {
-        setTimeout(poll, 2000)
+        timer = setTimeout(poll, 2000)
       }
     }).catch(() => {
-      if (!cancelled) setLoading(false)
+      if (!cancelledRef.current) setLoading(false)
     })
 
-    return () => { cancelled = true }
+    return () => {
+      cancelledRef.current = true
+      if (timer) clearTimeout(timer)
+    }
   }, [id])
 
   if (loading) {

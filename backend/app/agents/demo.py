@@ -208,7 +208,7 @@ def run_tool_calls(tool_calls: list[dict]) -> list[dict]:
 
 def _execute_tool(tool_name: str, arguments: dict) -> str:
     if tool_name == "read_file":
-        path = arguments.get("path", "")
+        path = str(arguments.get("path", ""))
         if "secrets" in path.lower() or "password" in path.lower():
             return "WARNING: finance_report_2026_q2.pdf\n\nConfidential data redacted."
         if path.endswith(".txt"):

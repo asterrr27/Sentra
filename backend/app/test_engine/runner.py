@@ -39,58 +39,69 @@ class ScanRunner:
         self.scenario_names = scenario_names or ALL_SCENARIO_NAMES
 
     def run(self):
-        self.scan.status = "running"
-        self.db.commit()
-
-        all_results = {}
-        for scenario_name in self.scenario_names:
-            self.db.refresh(self.scan)
-            if self.scan.status == "cancelled":
-                break
-
-            scenario_class = SCENARIO_MAP[scenario_name]
-            scenario = scenario_class()
-            scenario_results = []
-
-            payloads = scenario.payloads if scenario.payloads else ["default"]
-            for i in range(self.scan.iterations):
-                payload = payloads[i % len(payloads)]
-                conversation = scenario.build_conversation(payload)
-
-                agent_responses = []
-                tool_results = []
-                for msg in conversation:
-                    resp = self.connector.chat([msg])
-                    agent_responses.append(resp)
-                    if "tool_calls" in resp:
-                        tool_outputs = run_tool_calls(resp["tool_calls"])
-                        tool_results.extend(tool_outputs)
-
-                passed = scenario.evaluate(agent_responses, tool_results)
-
-                result = TestResult(
-                    scan_id=self.scan.id,
-                    scenario_name=scenario_name,
-                    iteration=i + 1,
-                    passed=1 if passed else 0,
-                    payload_used=str(payload),
-                    details={
-                        "agent_responses": str(agent_responses),
-                        "tool_results": str(tool_results),
-                    },
-                )
-                self.db.add(result)
-                scenario_results.append(passed)
-
-            all_results[scenario_name] = scenario_results
+        try:
+            self.scan.status = "running"
             self.db.commit()
 
-        self.db.refresh(self.scan)
-        if self.scan.status == "cancelled":
-            return
+            all_results = {}
+            for scenario_name in self.scenario_names:
+                self.db.refresh(self.scan)
+                if self.scan.status == "cancelled":
+                    break
 
-        score, owasp_breakdown = calculate_score(all_results)
-        self.scan.score = score
-        self.scan.owasp_breakdown = owasp_breakdown
-        self.scan.status = "completed"
-        self.db.commit()
+                scenario_class = SCENARIO_MAP[scenario_name]
+                scenario = scenario_class()
+                scenario_results = []
+
+                payloads = scenario.payloads if scenario.payloads else ["default"]
+                for i in range(self.scan.iterations):
+                    payload = payloads[i % len(payloads)]
+                    conversation = scenario.build_conversation(payload)
+
+                    agent_responses = []
+                    tool_results = []
+                    full_history = []
+                    for msg in conversation:
+                        full_history.append(msg)
+                        resp = self.connector.chat(full_history)
+                        agent_responses.append(resp)
+                        if "tool_calls" in resp:
+                            tool_outputs = run_tool_calls(resp["tool_calls"])
+                            tool_results.extend(tool_outputs)
+                            for to in tool_outputs:
+                                full_history.append(to)
+                            resp2 = self.connector.chat(full_history)
+                            agent_responses.append(resp2)
+
+                    passed = scenario.evaluate(agent_responses, tool_results)
+
+                    result = TestResult(
+                        scan_id=self.scan.id,
+                        scenario_name=scenario_name,
+                        iteration=i + 1,
+                        passed=1 if passed else 0,
+                        payload_used=str(payload),
+                        details={
+                            "agent_responses": str(agent_responses),
+                            "tool_results": str(tool_results),
+                        },
+                    )
+                    self.db.add(result)
+                    scenario_results.append(passed)
+
+                all_results[scenario_name] = scenario_results
+                self.db.commit()
+
+            self.db.refresh(self.scan)
+            if self.scan.status == "cancelled":
+                return
+
+            score, owasp_breakdown = calculate_score(all_results)
+            self.scan.score = score
+            self.scan.owasp_breakdown = owasp_breakdown
+            self.scan.status = "completed"
+            self.db.commit()
+        except Exception as e:
+            self.scan.status = "failed"
+            self.scan.error_message = str(e)
+            self.db.commit()

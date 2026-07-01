@@ -10,17 +10,18 @@ export default function Gauge({ score = 0, size = 180, label = '' }) {
   const color = score >= 80 ? '#22C55E' : score >= 50 ? '#F59E0B' : '#EF4444'
 
   useEffect(() => {
-    let start = 0
+    let raf
     const duration = 1200
     const startTime = performance.now()
     function step(now) {
       const elapsed = now - startTime
       const progress = Math.min(elapsed / duration, 1)
       const eased = 1 - Math.pow(1 - progress, 3)
-      setDisplayScore(Math.round(start + (score - start) * eased))
-      if (progress < 1) requestAnimationFrame(step)
+      setDisplayScore(Math.round((score) * eased))
+      if (progress < 1) raf = requestAnimationFrame(step)
     }
-    requestAnimationFrame(step)
+    raf = requestAnimationFrame(step)
+    return () => { if (raf) cancelAnimationFrame(raf) }
   }, [score])
 
   return (
