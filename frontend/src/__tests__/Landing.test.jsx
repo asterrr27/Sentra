@@ -13,13 +13,13 @@ describe('Landing page', () => {
     expect(screen.getAllByText(/Sentra/).length).toBeGreaterThanOrEqual(1)
   })
 
-  it('shows 9 attack types in hero section', () => {
+  it('shows 13 attack types in hero section', () => {
     render(
       <BrowserRouter>
         <Landing />
       </BrowserRouter>
     )
-    expect(screen.getByText(/9 attack types/i)).toBeTruthy()
+    expect(screen.getByText(/13 attack types/i)).toBeTruthy()
   })
 
   it('has Start Free Audit button', () => {

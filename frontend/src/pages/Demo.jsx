@@ -112,7 +112,7 @@ export default function Demo() {
             <div className="text-4xl mb-4">🎮</div>
             <h3 className="text-base font-semibold mb-2">Demo Security Audit</h3>
             <p className="text-xs text-white/40 mb-6">
-              This will run a simulated scan against all 9 attack scenarios and generate a sample security report.
+              This will run a simulated scan against all 13 attack scenarios spanning 6 OWASP categories and generate a sample security report.
             </p>
             <button
               onClick={() => setStarted(true)}

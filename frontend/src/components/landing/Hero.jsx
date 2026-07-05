@@ -135,7 +135,7 @@ export default function Hero() {
           {[
             { icon: '🤖', label: 'AI Agent', desc: 'Paste your URL' },
             { icon: '⚙️', label: 'Security Engine', desc: 'Analysis begins' },
-            { icon: '⚡', label: 'Attack Simulation', desc: '9 attack types' },
+            { icon: '⚡', label: 'Attack Simulation', desc: '13 attack types' },
             { icon: '📋', label: 'Security Report', desc: 'Actionable insights' },
           ].map((step, i) => (
             <div key={step.label} className="relative">

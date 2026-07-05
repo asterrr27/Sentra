@@ -3,8 +3,8 @@ import { useInView } from 'framer-motion'
 import StatCounter from '../ui/StatCounter'
 
 const STATS = [
-  { value: 9, suffix: '', label: 'Attack Scenarios' },
-  { value: 45, suffix: '+', label: 'Attack Payloads' },
+  { value: 13, suffix: '', label: 'Attack Scenarios' },
+  { value: 65, suffix: '+', label: 'Attack Payloads' },
   { value: 3, suffix: '', label: 'Agent Connectors' },
   { value: 100, suffix: '%', label: 'OWASP-Aligned' },
 ]

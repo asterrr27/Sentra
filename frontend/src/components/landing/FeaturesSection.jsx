@@ -9,7 +9,7 @@ const FEATURES = [
   {
     icon: '⚡',
     title: 'Automatic Attack Engine',
-    desc: 'Run 9 types of AI security attacks including prompt injection, role-play jailbreak, token smuggling, and more.',
+    desc: 'Run 13 types of AI security attacks spanning 6 OWASP LLM Top 10 categories including prompt injection, role-play jailbreak, and more.',
   },
   {
     icon: '📊',
