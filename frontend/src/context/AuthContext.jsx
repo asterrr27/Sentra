@@ -1,21 +1,37 @@
-import { createContext, useContext, useState, useEffect, useCallback } from 'react'
-import api from '../utils/api'
+import { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react'
+import { useNavigate } from 'react-router-dom'
+import api, { setOnUnauthorized } from '../utils/api'
 
 const AuthContext = createContext(null)
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null)
   const [loading, setLoading] = useState(true)
+  const mountedRef = useRef(true)
+  const navigate = useNavigate()
+
+  useEffect(() => {
+    setOnUnauthorized(() => {
+      setUser(null)
+      navigate('/login', { replace: true })
+    })
+  }, [navigate])
 
   useEffect(() => {
     const token = localStorage.getItem('sentra_token')
     if (!token) { setLoading(false); return }
     api.defaults.headers.common['Authorization'] = `Bearer ${token}`
-    api.get('/auth/me').then(r => setUser(r.data)).catch(() => {
-      localStorage.removeItem('sentra_token')
-      delete api.defaults.headers.common['Authorization']
-      console.warn('Auth check failed — logged out')
-    }).finally(() => setLoading(false))
+    api.get('/auth/me').then(r => {
+      if (mountedRef.current) setUser(r.data)
+    }).catch(() => {
+      if (mountedRef.current) {
+        localStorage.removeItem('sentra_token')
+        delete api.defaults.headers.common['Authorization']
+      }
+    }).finally(() => {
+      if (mountedRef.current) setLoading(false)
+    })
+    return () => { mountedRef.current = false }
   }, [])
 
   const login = useCallback(async (username, password) => {
@@ -38,7 +54,8 @@ export function AuthProvider({ children }) {
     localStorage.removeItem('sentra_token')
     delete api.defaults.headers.common['Authorization']
     setUser(null)
-  }, [])
+    navigate('/login', { replace: true })
+  }, [navigate])
 
   return (
     <AuthContext.Provider value={{ user, loading, login, register, logout }}>

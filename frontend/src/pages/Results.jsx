@@ -148,13 +148,15 @@ export default function Results() {
   const [loading, setLoading] = useState(true)
   const [loadingTimedOut, setLoadingTimedOut] = useState(false)
   const [exportMsg, setExportMsg] = useState('')
+  const [cancelMsg, setCancelMsg] = useState('')
   const cancelledRef = useRef(false)
 
   const handleCancel = async () => {
     try {
       await cancelScan(Number(id))
+      setCancelMsg('Cancelled')
     } catch {
-      setExportMsg('Cancel failed')
+      setCancelMsg('Cancel failed')
     }
   }
 
@@ -300,6 +302,7 @@ export default function Results() {
             <Link to="/dashboard" className="px-6 py-2.5 text-sm font-medium text-white/70 border border-white/10 rounded-full hover:border-primary/30 hover:text-primary transition-all">
               Back to Dashboard
             </Link>
+            {cancelMsg && <span className="text-xs text-white/50">{cancelMsg}</span>}
           </div>
           {data.scenarios && Object.keys(data.scenarios).length > 0 && (
             <div className="mt-10 text-left max-w-2xl mx-auto">
@@ -365,7 +368,7 @@ export default function Results() {
               Print
             </button>
             {data.status === 'completed' && id !== 'demo' && (
-              <button onClick={() => navigate(`/compare?id1=${id}&id2=`)} className="px-4 py-2 text-xs font-medium text-white/70 border border-white/10 rounded-full hover:border-primary/30 hover:text-primary transition-all">
+              <button onClick={() => navigate(`/compare?id1=${id}`)} className="px-4 py-2 text-xs font-medium text-white/70 border border-white/10 rounded-full hover:border-primary/30 hover:text-primary transition-all">
                 Compare
               </button>
             )}

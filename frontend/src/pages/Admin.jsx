@@ -14,7 +14,7 @@ export default function Admin() {
   const [loading, setLoading] = useState(true)
   const [adminError, setAdminError] = useState('')
   const [resetUserId, setResetUserId] = useState(null)
-  const [resetPassword, setResetPassword] = useState('')
+  const [resetPasswords, setResetPasswords] = useState({})
   const [resetMsg, setResetMsg] = useState({})
 
   useEffect(() => {
@@ -109,27 +109,32 @@ export default function Admin() {
                         <div className="flex items-center gap-1">
                           <input
                             type="password"
-                            value={resetPassword}
-                            onChange={e => setResetPassword(e.target.value)}
+                            value={resetPasswords[u.id] || ''}
+                            onChange={e => setResetPasswords(p => ({...p, [u.id]: e.target.value}))}
                             placeholder="New password"
                             className="w-24 bg-white/5 border border-white/10 rounded px-2 py-1 text-[10px] text-white placeholder-white/20 focus:outline-none focus:border-primary/40"
                           />
                           <button
                             onClick={async () => {
-                              if (!resetPassword) return
+                              const pw = resetPasswords[u.id]
+                              if (!pw) return
                               try {
-                                await resetUserPassword(u.id, resetPassword)
+                                await resetUserPassword(u.id, pw)
                                 setResetMsg(p => ({...p, [u.id]: 'Done!'}))
                               } catch { setResetMsg(p => ({...p, [u.id]: 'Failed'})) }
-                              setTimeout(() => { setResetMsg(p => ({...p, [u.id]: null})); setResetUserId(null); setResetPassword('') }, 2000)
+                              setTimeout(() => {
+                                setResetMsg(p => ({...p, [u.id]: null}))
+                                setResetUserId(null)
+                                setResetPasswords(p => { const n = {...p}; delete n[u.id]; return n })
+                              }, 2000)
                             }}
                             className="text-[10px] px-2 py-1 rounded bg-primary/20 text-primary hover:bg-primary/30"
                           >Set</button>
-                          <button onClick={() => { setResetUserId(null); setResetPassword('') }} className="text-[10px] px-2 py-1 text-white/30 hover:text-white">✕</button>
+                          <button onClick={() => { setResetUserId(null); setResetPasswords(p => { const n = {...p}; delete n[u.id]; return n }) }} className="text-[10px] px-2 py-1 text-white/30 hover:text-white">✕</button>
                         </div>
                       ) : (
                         <button
-                          onClick={() => { setResetUserId(u.id); setResetPassword(''); setResetMsg(p => ({...p, [u.id]: null})) }}
+                          onClick={() => { setResetUserId(u.id); setResetMsg(p => ({...p, [u.id]: null})) }}
                           className="text-[10px] text-white/30 hover:text-primary transition-colors"
                         >{resetMsg[u.id] || 'Reset PW'}</button>
                       )}

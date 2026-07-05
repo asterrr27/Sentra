@@ -7,7 +7,7 @@ export default function Gauge({ score = 0, size = 180, label = '' }) {
   const circumference = 2 * Math.PI * radius
   const offset = circumference - (displayScore / 100) * circumference
 
-  const color = score >= 80 ? '#22C55E' : score >= 50 ? '#F59E0B' : '#EF4444'
+  const color = displayScore >= 80 ? '#22C55E' : displayScore >= 50 ? '#F59E0B' : '#EF4444'
 
   useEffect(() => {
     let raf
@@ -52,7 +52,7 @@ export default function Gauge({ score = 0, size = 180, label = '' }) {
         />
       </svg>
       <div className="absolute inset-0 flex flex-col items-center justify-center z-10">
-        <span className={`text-3xl font-black tracking-tight ${score >= 80 ? 'text-success' : score >= 50 ? 'text-warning' : 'text-danger'}`}
+        <span className={`text-3xl font-black tracking-tight ${displayScore >= 80 ? 'text-success' : displayScore >= 50 ? 'text-warning' : 'text-danger'}`}
           style={{ textShadow: `0 0 20px ${color}40` }}>
           {displayScore}
         </span>

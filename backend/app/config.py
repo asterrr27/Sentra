@@ -1,3 +1,6 @@
+import secrets
+import warnings
+
 from pydantic_settings import BaseSettings
 
 
@@ -5,7 +8,10 @@ class Settings(BaseSettings):
     DATABASE_URL: str = "sqlite:///./agent_auditor.db"
     OPENAI_API_KEY: str = ""
     OPENAI_MODEL: str = "gpt-4o-mini"
-    JWT_SECRET: str = "sentra-jwt-secret-key-change-in-prod"
+    JWT_SECRET: str = ""
+    JWT_ALGORITHM: str = "HS256"
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 60
+    CORS_ORIGINS: str = "http://localhost:5173,http://localhost:8000"
     RATE_LIMIT: str = "10/minute"
     CUSTOM_AGENT_TIMEOUT: int = 15
 
@@ -13,3 +19,10 @@ class Settings(BaseSettings):
 
 
 settings = Settings()
+
+if not settings.JWT_SECRET:
+    settings.JWT_SECRET = secrets.token_urlsafe(48)
+    warnings.warn(
+        "JWT_SECRET not set in .env — using a randomly generated secret. "
+        "This will change on every restart, invalidating existing tokens."
+    )

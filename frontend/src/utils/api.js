@@ -5,13 +5,23 @@ const api = axios.create({
   timeout: 15000,
 })
 
+let onUnauthorized = null
+
+export function setOnUnauthorized(fn) {
+  onUnauthorized = fn
+}
+
 api.interceptors.response.use(
   r => r,
   err => {
     if (err.response?.status === 401) {
       localStorage.removeItem('sentra_token')
       delete api.defaults.headers.common['Authorization']
-      window.location.href = '/'
+      if (onUnauthorized) {
+        onUnauthorized()
+      } else {
+        window.location.href = '/'
+      }
     }
     return Promise.reject(err)
   },

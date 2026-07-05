@@ -73,7 +73,8 @@ export default function Demo() {
     }, 220)
 
     const cycleInterval = setInterval(() => {
-      if (!unmounted && !paused) setCycle(c => c + 1)
+      if (unmounted) return
+      setCycle(c => c + 1)
     }, 180)
 
     return () => {

@@ -14,7 +14,6 @@ const SCENARIOS = [
 
 export default function AttackFlow({ cycle = 0, completed = 0 }) {
   const ref = useRef(null)
-  const ready = useRef(false)
 
   useEffect(() => {
     const canvas = ref.current
@@ -94,14 +93,14 @@ export default function AttackFlow({ cycle = 0, completed = 0 }) {
     doDraw()
 
     const ro = new ResizeObserver(() => {
-      const parent = canvas.parentElement
-      if (parent && parent.offsetWidth > 0) {
-        doDraw()
-        ro.disconnect()
-      }
+      doDraw()
     })
     ro.observe(canvas.parentElement || canvas)
-    return () => ro.disconnect()
+    window.addEventListener('resize', doDraw)
+    return () => {
+      ro.disconnect()
+      window.removeEventListener('resize', doDraw)
+    }
   }, [cycle, completed])
 
   return (

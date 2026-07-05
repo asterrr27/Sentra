@@ -1,4 +1,4 @@
-import { Routes, Route, useLocation } from 'react-router-dom'
+import { Routes, Route, useLocation, Link } from 'react-router-dom'
 import { AnimatePresence } from 'framer-motion'
 import { AuthProvider } from './context/AuthContext'
 import ErrorBoundary from './components/ErrorBoundary'
@@ -14,6 +14,19 @@ import Demo from './pages/Demo'
 import Login from './pages/Login'
 import Register from './pages/Register'
 import Admin from './pages/Admin'
+
+function NotFound() {
+  return (
+    <div className="min-h-[60vh] flex flex-col items-center justify-center text-center px-4">
+      <div className="text-5xl mb-4 opacity-30">404</div>
+      <h2 className="text-xl font-bold mb-2">Page Not Found</h2>
+      <p className="text-sm text-white/40 mb-6">The page you're looking for doesn't exist.</p>
+      <Link to="/" className="px-6 py-2.5 text-sm font-semibold text-[#09090B] bg-gradient-to-r from-primary to-secondary rounded-full hover:shadow-lg hover:shadow-primary/20 transition-all">
+        Go Home
+      </Link>
+    </div>
+  )
+}
 
 export default function App() {
   const location = useLocation()
@@ -35,6 +48,7 @@ export default function App() {
               <Route path="/compare" element={<Compare />} />
               <Route path="/payloads" element={<Payloads />} />
               <Route path="/demo" element={<Demo />} />
+              <Route path="*" element={<NotFound />} />
             </Routes>
           </AnimatePresence>
         </main>

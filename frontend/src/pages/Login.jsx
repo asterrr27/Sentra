@@ -59,9 +59,9 @@ export default function Login() {
             </div>
             {error && <p className="text-xs text-danger">{error}</p>}
             <div className="flex justify-end">
-              <Link to="/dashboard" className="text-xs text-white/30 hover:text-primary transition-colors">
+              <span className="text-xs text-white/20 cursor-not-allowed">
                 Forgot password?
-              </Link>
+              </span>
             </div>
             <button
               type="submit" disabled={busy}

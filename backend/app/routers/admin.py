@@ -23,8 +23,13 @@ def require_admin(current_user: CurrentUser = Depends(get_current_user)) -> Curr
 @router.get("/users")
 def list_users(db: Session = Depends(get_db), _=Depends(require_admin)):
     users = db.query(User).order_by(User.created_at.desc()).all()
+    def mask_email(email: str) -> str:
+        at = email.find("@")
+        if at < 2:
+            return email
+        return email[0] + "***" + email[at - 1:] if at > 2 else email[0] + "***" + email[at:]
     return [
-        {"id": u.id, "username": u.username, "email": u.email, "role": u.role, "created_at": str(u.created_at or "")}
+        {"id": u.id, "username": u.username, "email": mask_email(u.email), "role": u.role, "created_at": str(u.created_at or "")}
         for u in users
     ]
 

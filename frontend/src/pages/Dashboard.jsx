@@ -59,6 +59,11 @@ export default function Dashboard() {
   const navigateRef = useRef(null)
   const lastProgressRef = useRef(Date.now())
   const mountedRef = useRef(true)
+  const pollIterationsRef = useRef(5)
+  const pollScenarioListRef = useRef(SCENARIO_LIST)
+  const pollTotalRef = useRef(0)
+  const lastCompletedRef = useRef(0)
+  const pollCycleRef = useRef(0)
 
   useEffect(() => {
     listScans().then(r => { if (mountedRef.current) setScans(r) }).catch(() => { if (mountedRef.current) setFetchError('Failed to load scan history') })
@@ -115,23 +120,26 @@ export default function Dashboard() {
     return () => { if (chartInstance.current) chartInstance.current.destroy() }
   }, [scans])
 
-  const validateUrl = useCallback(() => {
+  const validateUrl = useCallback(async () => {
     if (!agentUrl) return
     setConnectionStatus('validating')
-    setTimeout(() => {
+    try {
+      const resp = await fetch(agentUrl, { method: 'HEAD', mode: 'no-cors', signal: AbortSignal.timeout(5000) })
+      setConnectionStatus(resp.ok || resp.type === 'opaque' ? 'valid' : 'invalid')
+    } catch {
       setConnectionStatus(agentUrl.startsWith('http') ? 'valid' : 'invalid')
-    }, 1000)
+    }
   }, [agentUrl])
 
   const handleCancel = useCallback(async () => {
     if (!scanIdRef.current) return
     try {
       await cancelScan(scanIdRef.current)
-      if (pollRef.current) clearInterval(pollRef.current)
+      if (pollRef.current) { clearInterval(pollRef.current); pollRef.current = null }
       setTerminalLines(prev => [...prev, { text: 'Scan cancelled by user.', type: 'fail' }])
       setScanning(false)
       scanIdRef.current = null
-      listScans().then(r => setScans(r)).catch(() => {})
+      listScans().then(r => { if (mountedRef.current) setScans(r) }).catch(() => {})
     } catch (err) {
       setTerminalLines(prev => [...prev, { text: `Cancel failed: ${err.message || 'Unknown error'}`, type: 'fail' }])
     }
@@ -140,8 +148,10 @@ export default function Dashboard() {
   const handleCancelFromTable = useCallback(async (scanId) => {
     try {
       await cancelScan(scanId)
-      listScans().then(r => setScans(r)).catch(() => {})
-    } catch { /* ignore */ }
+      listScans().then(r => { if (mountedRef.current) setScans(r) }).catch(() => {})
+    } catch (err) {
+      console.error('Cancel from table failed:', err)
+    }
   }, [])
 
   const startScan = useCallback(async () => {
@@ -167,12 +177,14 @@ export default function Dashboard() {
       scanIdRef.current = res.scan_id
       const scenarioList = selectedScenarios.length ? selectedScenarios : SCENARIO_LIST
       const totalIterations = scenarioList.length * iterations
+      pollIterationsRef.current = iterations
+      pollScenarioListRef.current = scenarioList
+      pollTotalRef.current = totalIterations
+      lastCompletedRef.current = 0
+      pollCycleRef.current = 0
 
       setTerminalLines(prev => [...prev, { text: 'Initializing attack engine...', type: 'info' }])
       setTerminalLines(prev => [...prev, { text: `Scan #${res.scan_id} queued. Running ${totalIterations} tests...`, type: 'info' }])
-
-      let lastCompleted = 0
-      let pollCycle = 0
 
       const poll = setInterval(async () => {
         if (Date.now() - lastProgressRef.current > 30000) {
@@ -184,8 +196,11 @@ export default function Dashboard() {
         }
 
         try {
-          const st = await getScanStatus(res.scan_id)
-          const detail = await getScanResults(res.scan_id)
+          const sid = scanIdRef.current
+          if (!sid) return
+
+          const st = await getScanStatus(sid)
+          const detail = await getScanResults(sid)
 
           if (st.status === 'cancelled') {
             clearInterval(poll)
@@ -196,27 +211,30 @@ export default function Dashboard() {
             return
           }
 
+          const curIterations = pollIterationsRef.current
+          const curScenarioList = pollScenarioListRef.current
+
           let done = 0
           let comp = 0
           if (detail.scenarios) {
             for (const its of Object.values(detail.scenarios)) {
               done += its.length
-              if (its.length === iterations) comp++
+              if (its.length === curIterations) comp++
             }
           }
 
-          const pct = Math.min(100, Math.round((done / totalIterations) * 100))
+          const pct = Math.min(100, Math.round((done / pollTotalRef.current) * 100))
           setProgress(pct)
-          setCycle(pollCycle++)
-          if (comp > lastCompleted) {
-            for (let i = lastCompleted; i < comp; i++) {
-              const sname = scenarioList[i]
+          setCycle(pollCycleRef.current++)
+          if (comp > lastCompletedRef.current) {
+            for (let i = lastCompletedRef.current; i < comp; i++) {
+              const sname = curScenarioList[i]
               setTerminalLines(prev => [...prev, {
-                text: `Scenario: ${SCENARIO_LABELS[sname] || sname} — ${iterations}/${iterations} tests complete`,
+                text: `Scenario: ${SCENARIO_LABELS[sname] || sname} — ${curIterations}/${curIterations} tests complete`,
                 type: 'pass',
               }])
             }
-            lastCompleted = comp
+            lastCompletedRef.current = comp
             setCompletedScenarios(comp)
             lastProgressRef.current = Date.now()
           }
@@ -229,7 +247,7 @@ export default function Dashboard() {
             setScanning(false)
             setTerminalLines(prev => [...prev, { text: 'Audit completed. Generating security report...', type: 'pass' }])
             navigateRef.current = setTimeout(() => {
-              if (mountedRef.current) navigate(`/results/${res.scan_id}`)
+              if (mountedRef.current) navigate(`/results/${sid}`)
             }, 800)
           }
         } catch (err) {

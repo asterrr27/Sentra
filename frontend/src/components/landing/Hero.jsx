@@ -59,7 +59,7 @@ function ParticleField() {
     return () => { cancelAnimationFrame(animId); window.removeEventListener('resize', resize) }
   }, [])
 
-  return <canvas ref={ref} className="absolute inset-0 w-full h-full pointer-events-none" style={{ opacity: 0.6 }} />
+  return <canvas ref={ref} aria-label="Animated particle field background" className="absolute inset-0 w-full h-full pointer-events-none" style={{ opacity: 0.6 }} />
 }
 
 export default function Hero() {

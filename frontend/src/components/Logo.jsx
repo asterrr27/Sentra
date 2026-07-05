@@ -1,7 +1,8 @@
 import { motion } from 'framer-motion'
+import { useId } from 'react'
 
 export default function Logo({ size = 32, withText = false, className = '' }) {
-  const gradientId = `logo-gradient-${Math.random().toString(36).slice(2, 9)}`
+  const gradientId = useId()
   return (
     <div className={`flex items-center gap-2 ${className}`}>
       <svg width={size} height={size} viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">

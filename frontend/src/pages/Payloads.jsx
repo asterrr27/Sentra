@@ -25,9 +25,20 @@ export default function Payloads() {
     getAllPayloads().then(r => { setPayloads(r); setError('') }).catch(() => setError('Failed to load payloads'))
   }, [])
 
-  const copyPayload = (text, key) => {
+  const copyPayload = async (text, key) => {
     const str = typeof text === 'string' ? text : JSON.stringify(text, null, 2)
-    navigator.clipboard.writeText(str)
+    try {
+      await navigator.clipboard.writeText(str)
+    } catch {
+      const ta = document.createElement('textarea')
+      ta.value = str
+      ta.style.position = 'fixed'
+      ta.style.opacity = '0'
+      document.body.appendChild(ta)
+      ta.select()
+      document.execCommand('copy')
+      document.body.removeChild(ta)
+    }
     setCopied(key)
     setTimeout(() => setCopied(null), 2000)
   }

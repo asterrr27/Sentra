@@ -1,6 +1,6 @@
-import datetime
+from datetime import datetime, timezone
 
-from sqlalchemy import Column, Integer, String, Float, DateTime, Text, JSON, ForeignKey
+from sqlalchemy import Column, Integer, String, Float, Boolean, DateTime, Text, JSON, ForeignKey
 from sqlalchemy.orm import relationship
 
 from app.database import Base
@@ -21,7 +21,7 @@ class Scan(Base):
     owasp_breakdown = Column(JSON, nullable=True)
     status = Column(String(20), default="pending")
     error_message = Column(Text, nullable=True)
-    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
 
     results = relationship("TestResult", back_populates="scan", cascade="all, delete-orphan")
 
@@ -34,7 +34,7 @@ class User(Base):
     email = Column(String(120), unique=True, nullable=False, index=True)
     password_hash = Column(String(255), nullable=False)
     role = Column(String(20), default="user")
-    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
 
 
 class TestResult(Base):
@@ -44,7 +44,7 @@ class TestResult(Base):
     scan_id = Column(Integer, ForeignKey("scans.id"), nullable=False)
     scenario_name = Column(String(100), nullable=False)
     iteration = Column(Integer, nullable=False)
-    passed = Column(Integer, nullable=False)
+    passed = Column(Boolean, nullable=False)
     payload_used = Column(Text, nullable=True)
     details = Column(JSON, nullable=True)
 

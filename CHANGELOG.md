@@ -1,5 +1,39 @@
 # Changelog
 
+## [2.2.0] - 2026-07-05
+### Security
+- JWT secret now auto-generates a random 48-char value if missing from `.env`; warns on startup
+- Admin user list masks email addresses (PII leak fix)
+- Added Content-Security-Policy meta tag to frontend HTML
+- Added CORS middleware with configurable origins
+
+### Fixed
+- **Critical:** Admin panel shared password state — per-user password state prevents cross-user password reset bug
+- **Critical:** Hardcoded JWT secret in config — now reads from env with strong random fallback
+- Stale closures in `startScan` polling — uses refs for mutable values instead of closure capture
+- 401 interceptor hard reload — uses React Router navigation via callback instead of `window.location`
+- Fake URL validation — now performs actual HTTP HEAD request with timeout
+- SQLite-specific `check_same_thread` only applied for SQLite URLs
+- `utcnow` deprecation — replaced with `datetime.now(timezone.utc)`
+- `passed` column type changed from `Integer` to `Boolean`
+- Gauge color now animates with `displayScore`, not final score
+- Logo gradient ID uses `useId()` instead of `Math.random()`
+- Clipboard copy fallback when clipboard API unavailable
+- ResizeObserver no longer disconnects after first canvas resize
+- `cycleInterval` in Demo no longer runs while paused
+- AuthContext cleanup on unmount via `mountedRef`
+- Empty catch blocks now log errors
+- Component-internal `Card` extracted outside `Compare` function
+- Forgot password link changed to disabled text (no reset flow exists)
+- Compare button no longer generates empty `id2=` param
+
+### Changed
+- Access token expiry reduced from 24h to 60min (configurable)
+- Added `JWT_ALGORITHM`, `ACCESS_TOKEN_EXPIRE_MINUTES`, `CORS_ORIGINS` to config
+- TrustSection stats replaced fake numbers with real platform capabilities
+- 404 catch-all route added to frontend router
+- Canvas elements now have `aria-label` attributes
+
 ## [2.1.0] - 2026-07-01
 ### Added
 - 4 new attack types: role_play_jailbreak, token_smuggling, context_window_overflow, tool_abuse (5 payloads each)

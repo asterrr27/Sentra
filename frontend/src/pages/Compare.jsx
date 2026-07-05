@@ -4,6 +4,68 @@ import { Link } from 'react-router-dom'
 import PageTransition from '../components/layout/PageTransition'
 import { getScanResults } from '../utils/api'
 
+function CompareCard({ data, loading, error, label }) {
+  if (loading) return (
+    <div className="glass-card p-8">
+      <div className="space-y-4 animate-pulse">
+        <div className="h-4 bg-white/5 rounded w-1/3 mx-auto" />
+        <div className="h-16 w-16 bg-white/5 rounded-full mx-auto" />
+        <div className="h-3 bg-white/5 rounded w-1/2 mx-auto" />
+        {[1, 2, 3].map(i => <div key={i} className="h-3 bg-white/5 rounded w-full" />)}
+      </div>
+    </div>
+  )
+  if (error) return (
+    <div className="glass-card p-8 text-center">
+      <p className="text-sm text-danger">{error}</p>
+    </div>
+  )
+  if (!data) return (
+    <div className="glass-card p-8 text-center">
+      <p className="text-sm text-white/30">No scan data loaded</p>
+    </div>
+  )
+  const score = data.score ?? 0
+  return (
+    <div className={`glass-card p-6 ${score >= 80 ? 'ring-1 ring-success/20' : score >= 50 ? 'ring-1 ring-warning/20' : 'ring-1 ring-danger/20'}`}>
+      <div className="text-center mb-6">
+        <div className="text-xs text-white/30 mb-1">{label}</div>
+        <div className={`text-4xl font-black ${score >= 80 ? 'text-success' : score >= 50 ? 'text-warning' : 'text-danger'}`}
+          style={{ textShadow: score >= 80 ? '0 0 20px rgba(34,197,94,0.3)' : score >= 50 ? '0 0 20px rgba(245,158,11,0.3)' : '0 0 20px rgba(239,68,68,0.3)' }}>
+          {score.toFixed(0)}
+        </div>
+        <div className="text-xs text-white/30 mt-1">Security Score</div>
+      </div>
+      <table className="w-full text-sm">
+        <thead>
+          <tr className="text-[10px] text-white/30 uppercase tracking-wider border-b border-white/5">
+            <th className="text-left pb-2">Scenario</th>
+            <th className="text-right pb-2">Pass Rate</th>
+          </tr>
+        </thead>
+        <tbody>
+          {data.scenarios && Object.entries(data.scenarios).map(([name, its]) => {
+            const passed = its.filter(i => i.passed).length
+            const total = its.length
+            const rate = Math.round((passed / total) * 100)
+            return (
+              <tr key={name} className="border-b border-white/5 last:border-0">
+                <td className="py-2 text-xs text-white/50 capitalize">{name.replace(/_/g, ' ')}</td>
+                <td className={`py-2 text-xs text-right font-bold ${rate >= 80 ? 'text-success' : rate >= 50 ? 'text-warning' : 'text-danger'}`}>
+                  {passed}/{total}
+                </td>
+              </tr>
+            )
+          })}
+        </tbody>
+      </table>
+      <Link to={`/results/${data.scan_id ?? ''}`} className="mt-4 block text-center text-xs text-primary/60 hover:text-primary transition-colors">
+        View Full Report →
+      </Link>
+    </div>
+  )
+}
+
 export default function Compare() {
   const [searchParams] = useSearchParams()
   const id1 = searchParams.get('id1')
@@ -28,68 +90,6 @@ export default function Compare() {
     }
   }, [id1, id2])
 
-  const Card = ({ data, loading, error, label }) => {
-    if (loading) return (
-      <div className="glass-card p-8">
-        <div className="space-y-4 animate-pulse">
-          <div className="h-4 bg-white/5 rounded w-1/3 mx-auto" />
-          <div className="h-16 w-16 bg-white/5 rounded-full mx-auto" />
-          <div className="h-3 bg-white/5 rounded w-1/2 mx-auto" />
-          {[1, 2, 3].map(i => <div key={i} className="h-3 bg-white/5 rounded w-full" />)}
-        </div>
-      </div>
-    )
-    if (error) return (
-      <div className="glass-card p-8 text-center">
-        <p className="text-sm text-danger">{error}</p>
-      </div>
-    )
-    if (!data) return (
-      <div className="glass-card p-8 text-center">
-        <p className="text-sm text-white/30">Paste a scan ID to compare</p>
-      </div>
-    )
-    const score = data.score ?? 0
-    return (
-      <div className={`glass-card p-6 ${score >= 80 ? 'ring-1 ring-success/20' : score >= 50 ? 'ring-1 ring-warning/20' : 'ring-1 ring-danger/20'}`}>
-        <div className="text-center mb-6">
-          <div className="text-xs text-white/30 mb-1">{label}</div>
-          <div className={`text-4xl font-black ${score >= 80 ? 'text-success' : score >= 50 ? 'text-warning' : 'text-danger'}`}
-            style={{ textShadow: score >= 80 ? '0 0 20px rgba(34,197,94,0.3)' : score >= 50 ? '0 0 20px rgba(245,158,11,0.3)' : '0 0 20px rgba(239,68,68,0.3)' }}>
-            {score.toFixed(0)}
-          </div>
-          <div className="text-xs text-white/30 mt-1">Security Score</div>
-        </div>
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="text-[10px] text-white/30 uppercase tracking-wider border-b border-white/5">
-              <th className="text-left pb-2">Scenario</th>
-              <th className="text-right pb-2">Pass Rate</th>
-            </tr>
-          </thead>
-          <tbody>
-            {data.scenarios && Object.entries(data.scenarios).map(([name, its]) => {
-              const passed = its.filter(i => i.passed).length
-              const total = its.length
-              const rate = Math.round((passed / total) * 100)
-              return (
-                <tr key={name} className="border-b border-white/5 last:border-0">
-                  <td className="py-2 text-xs text-white/50 capitalize">{name.replace(/_/g, ' ')}</td>
-                  <td className={`py-2 text-xs text-right font-bold ${rate >= 80 ? 'text-success' : rate >= 50 ? 'text-warning' : 'text-danger'}`}>
-                    {passed}/{total}
-                  </td>
-                </tr>
-              )
-            })}
-          </tbody>
-        </table>
-        <Link to={`/results/${data.scan_id ?? ''}`} className="mt-4 block text-center text-xs text-primary/60 hover:text-primary transition-colors">
-          View Full Report →
-        </Link>
-      </div>
-    )
-  }
-
   return (
     <PageTransition>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-12">
@@ -98,8 +98,8 @@ export default function Compare() {
           <Link to="/dashboard" className="text-xs text-white/30 hover:text-white transition-colors">&larr; Dashboard</Link>
         </div>
         <div className="grid md:grid-cols-2 gap-6">
-          <Card data={data1} loading={loading1} error={err1} label={id1 ? `Scan #${id1}` : 'Scan 1'} />
-          <Card data={data2} loading={loading2} error={err2} label={id2 ? `Scan #${id2}` : 'Scan 2'} />
+          <CompareCard data={data1} loading={loading1} error={err1} label={id1 ? `Scan #${id1}` : 'Scan 1'} />
+          <CompareCard data={data2} loading={loading2} error={err2} label={id2 ? `Scan #${id2}` : 'Scan 2'} />
         </div>
         {!id1 && !id2 && (
           <div className="text-center mt-12">

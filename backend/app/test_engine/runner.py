@@ -79,7 +79,7 @@ class ScanRunner:
                         scan_id=self.scan.id,
                         scenario_name=scenario_name,
                         iteration=i + 1,
-                        passed=1 if passed else 0,
+                        passed=bool(passed),
                         payload_used=str(payload),
                         details={
                             "agent_responses": str(agent_responses),
