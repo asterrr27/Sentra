@@ -61,12 +61,12 @@ def generate_pdf(scan: Scan, results: list[TestResult]) -> bytes:
 
         styles = getSampleStyleSheet()
         PRIMARY = HexColor("#06B6D4")
-        DARK_BG = HexColor("#0F172A")
-        CARD_BG = HexColor("#1E293B")
-        TEXT_PRIMARY = HexColor("#F1F5F9")
-        TEXT_SECONDARY = HexColor("#94A3B8")
+        DARK_BG = HexColor("#F1F5F9")
+        CARD_BG = HexColor("#F8FAFC")
+        TEXT_PRIMARY = HexColor("#1E293B")
+        TEXT_SECONDARY = HexColor("#475569")
         TEXT_MUTED = HexColor("#64748B")
-        BORDER = HexColor("#334155")
+        BORDER = HexColor("#CBD5E1")
 
         s_cover_title = ParagraphStyle("CoverTitle", fontSize=28, leading=34, textColor=PRIMARY, alignment=TA_CENTER, spaceAfter=6)
         s_cover_sub = ParagraphStyle("CoverSub", fontSize=11, leading=15, textColor=TEXT_SECONDARY, alignment=TA_CENTER, spaceAfter=4)
@@ -376,11 +376,11 @@ def generate_pdf(scan: Scan, results: list[TestResult]) -> bytes:
 
         config_items = [
             ["Scan ID", f"#{scan.id}"],
-            ["Provider", scan.provider or "—"],
-            ["Agent Type", scan.agent_type or "—"],
+            ["Provider", scan.provider or "-"],
+            ["Agent Type", scan.agent_type or "-"],
             ["Iterations", str(scan.iterations)],
             ["Total Tests", str(total_tests)],
-            ["Created", scan.created_at.strftime("%Y-%m-%d %H:%M UTC") if scan.created_at else "—"],
+            ["Created", scan.created_at.strftime("%Y-%m-%d %H:%M UTC") if scan.created_at else "-"],
             ["Report Generated", datetime.utcnow().strftime("%Y-%m-%d %H:%M UTC")],
         ]
         if scan.system_prompt:
@@ -401,7 +401,7 @@ def generate_pdf(scan: Scan, results: list[TestResult]) -> bytes:
         elements.append(Spacer(1, 20))
 
         elements.append(Paragraph(
-            "Sentra — AI Agent Security Platform &nbsp;|&nbsp; CONFIDENTIAL",
+            "Sentra - AI Agent Security Platform &nbsp;|&nbsp; CONFIDENTIAL",
             ParagraphStyle("FooterText", fontSize=7, leading=10, textColor=TEXT_MUTED, alignment=TA_CENTER),
         ))
 
