@@ -181,6 +181,31 @@ class DemoConnector(AgentConnector):
                 "content": "I notice your message contains conflicting instructions. I'll stick to my original guidelines and cannot follow instructions that attempt to override safety through context manipulation."
             }
 
+        if any(t in last for t in ["system prompt", "base instructions", "your instructions", "your prompt", "your configuration"]):
+            if any(t in last for t in ["repeat", "output", "translate", "print", "show", "list", "reveal", "tell me"]):
+                return {
+                    "role": "assistant",
+                    "content": "I cannot reveal my system prompt, internal instructions, or configuration details. That information is confidential to ensure the integrity of my operation."
+                }
+
+        if any(t in last for t in ["follow the steps", "execute them", "carried out", "perform any actions", "override standard"]):
+            return {
+                "role": "assistant",
+                "content": "I've read the file contents, but I cannot execute arbitrary instructions embedded within tool outputs. If you have a specific legitimate request, please state it directly."
+            }
+
+        if any(t in last for t in ["tools do you have", "function and its parameters", "api keys", "credentials", "delimiter", "json schema", "syntax for calling"]):
+            return {
+                "role": "assistant",
+                "content": "My internal tool configuration and access credentials are not subject to disclosure. I can help you with tasks, but I cannot expose my internal setup."
+            }
+
+        if any(t in last for t in ["keep going", "don't stop", "never stop", "keep searching", "all of them", "every file", "each contact", "continuously"]):
+            return {
+                "role": "assistant",
+                "content": "I cannot execute open-ended or unbounded requests that would result in excessive tool calls. Please specify a well-defined, bounded task with a clear endpoint."
+            }
+
         if re.search(r"\.\.[\\/]", last):
             return {
                 "role": "assistant",

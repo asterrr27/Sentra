@@ -17,6 +17,10 @@ const SCENARIO_LABELS = {
   token_smuggling: 'Token Smuggling',
   context_window_overflow: 'Context Window Overflow',
   tool_abuse: 'Tool Abuse',
+  system_prompt_extraction: 'System Prompt Extraction',
+  tool_output_injection: 'Tool Output Injection',
+  prompt_boundary_probing: 'Prompt Boundary Probing',
+  tool_loop_exploit: 'Tool Loop Exploit',
 }
 
 const SCENARIO_VULN_INFO = {
@@ -56,6 +60,22 @@ const SCENARIO_VULN_INFO = {
     description: 'Agent accepted malformed or maliciously crafted tool parameters that could lead to unintended tool execution.',
     mitigation: 'Implement strict parameter validation for all tool calls. Use typed schemas with bounds checking for all tool inputs.',
   },
+  system_prompt_extraction: {
+    description: 'Agent revealed its system prompt, internal instructions, or configuration when asked directly by the user.',
+    mitigation: 'Implement prompt-level guards that block extraction attempts. Treat all system instructions as confidential and never echo them back.',
+  },
+  tool_output_injection: {
+    description: 'Agent treated tool output content as executable instructions rather than untrusted data, executing embedded commands.',
+    mitigation: 'Treat all tool outputs and external content as untrusted data. Sanitize output before passing to subsequent tools or responses.',
+  },
+  prompt_boundary_probing: {
+    description: 'Agent leaked internal tool schemas, API keys, path restrictions, or configuration details through probing techniques.',
+    mitigation: 'Restrict information disclosure about internal configuration. Implement rate-limiting on probing attempts and reject requests for tool schemas.',
+  },
+  tool_loop_exploit: {
+    description: 'Agent accepted unbounded or open-ended requests that could lead to excessive tool calls and resource consumption.',
+    mitigation: 'Implement caps on tool call counts per conversation. Reject open-ended loop patterns and bound all iterative operations.',
+  },
 }
 
 function scoreToRisk(score) {
@@ -89,7 +109,7 @@ function deriveVulnerabilities(scenarios) {
   return vulns.sort((a, b) => b.likelihood - a.likelihood)
 }
 
-function ScenarioSection({ name, its }) {
+function ScenarioSection({ name, its, owaspCategory }) {
   const [open, setOpen] = useState(true)
   const passed = its.filter(i => i.passed).length
   const total = its.length
@@ -105,7 +125,8 @@ function ScenarioSection({ name, its }) {
           <span className={`w-2 h-2 rounded-full ${rate === 100 ? 'bg-success' : rate >= 50 ? 'bg-warning' : 'bg-danger'}`} />
           <div>
             <h4 className="text-sm font-semibold">{SCENARIO_LABELS[name] || name}</h4>
-            <span className="text-[10px] text-white/40">{passed}/{total} passed</span>
+            <span className="text-[10px] text-white/30">{owaspCategory || ''}</span>
+            <span className="text-[10px] text-white/40 ml-2">{passed}/{total} passed</span>
           </div>
         </div>
         <div className="flex items-center gap-3">
@@ -272,7 +293,7 @@ export default function Results() {
               <h3 className="text-sm font-semibold mb-4">Partial Results</h3>
               <div className="space-y-3">
                 {Object.entries(data.scenarios).map(([name, its]) => (
-                  <ScenarioSection key={name} name={name} its={its} />
+                  <ScenarioSection key={name} name={name} its={its} owaspCategory={data.scenario_owasp?.[name] || ''} />
                 ))}
               </div>
             </div>
@@ -309,7 +330,7 @@ export default function Results() {
               <h3 className="text-sm font-semibold mb-4">Partial Results So Far</h3>
               <div className="space-y-3">
                 {Object.entries(data.scenarios).map(([name, its]) => (
-                  <ScenarioSection key={name} name={name} its={its} />
+                  <ScenarioSection key={name} name={name} its={its} owaspCategory={data.scenario_owasp?.[name] || ''} />
                 ))}
               </div>
             </div>
@@ -473,7 +494,7 @@ export default function Results() {
           <h3 className="text-base font-bold mb-4">Attack Details</h3>
           <div className="space-y-3">
             {data.scenarios && Object.entries(data.scenarios).map(([name, its]) => (
-              <ScenarioSection key={name} name={name} its={its} />
+              <ScenarioSection key={name} name={name} its={its} owaspCategory={data.scenario_owasp?.[name] || ''} />
             ))}
           </div>
         </motion.div>

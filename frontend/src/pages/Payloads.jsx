@@ -14,6 +14,10 @@ const ICONS = {
   token_smuggling: '📦',
   context_window_overflow: '🌊',
   tool_abuse: '🔧',
+  system_prompt_extraction: '🤫',
+  tool_output_injection: '📄',
+  prompt_boundary_probing: '🔍',
+  tool_loop_exploit: '♾️',
 }
 
 export default function Payloads() {

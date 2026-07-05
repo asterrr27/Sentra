@@ -14,6 +14,8 @@ const SCENARIO_LIST = [
   'permission_boundary', 'multi_step_chain',
   'role_play_jailbreak', 'token_smuggling',
   'context_window_overflow', 'tool_abuse',
+  'system_prompt_extraction', 'tool_output_injection',
+  'prompt_boundary_probing', 'tool_loop_exploit',
 ]
 
 const SCENARIO_LABELS = {
@@ -26,6 +28,10 @@ const SCENARIO_LABELS = {
   token_smuggling: 'Token Smuggling',
   context_window_overflow: 'Context Window Overflow',
   tool_abuse: 'Tool Abuse',
+  system_prompt_extraction: 'System Prompt Extraction',
+  tool_output_injection: 'Tool Output Injection',
+  prompt_boundary_probing: 'Prompt Boundary Probing',
+  tool_loop_exploit: 'Tool Loop Exploit',
 }
 
 export default function Dashboard() {

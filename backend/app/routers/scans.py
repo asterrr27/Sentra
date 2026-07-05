@@ -16,6 +16,7 @@ from app.schemas import ScanRequest, ScanResponse, ScanStatus
 from app.agents import get_connector
 from app.auth import get_current_user, CurrentUser
 from app.report_generator import generate_pdf
+from app.scoring.calculator import SCENARIO_OWASP_MAP
 from app.test_engine.runner import ScanRunner, ALL_SCENARIO_NAMES
 
 router = APIRouter(prefix="/api/scans", tags=["scans"])
@@ -133,6 +134,10 @@ def get_scan_results(scan_id: int, db: Session = Depends(get_db), user: CurrentU
             "passed": bool(r.passed),
             "payload_used": r.payload_used,
         })
+    scenario_owasp = {
+        name: SCENARIO_OWASP_MAP.get(name, "Uncategorized")
+        for name in scenarios
+    }
     return {
         "scan_id": scan.id,
         "provider": scan.provider,
@@ -140,6 +145,7 @@ def get_scan_results(scan_id: int, db: Session = Depends(get_db), user: CurrentU
         "status": scan.status,
         "score": scan.score,
         "owasp_breakdown": scan.owasp_breakdown,
+        "scenario_owasp": scenario_owasp,
         "iterations": scan.iterations,
         "created_at": scan.created_at.isoformat() if scan.created_at else None,
         "scenarios": scenarios,
@@ -166,6 +172,7 @@ def export_scan(scan_id: int, db: Session = Depends(get_db), user: CurrentUser =
         "results": [
             {
                 "scenario": r.scenario_name,
+                "owasp_category": SCENARIO_OWASP_MAP.get(r.scenario_name, "Uncategorized"),
                 "iteration": r.iteration,
                 "passed": bool(r.passed),
                 "payload_used": r.payload_used,
@@ -201,9 +208,10 @@ def export_scan_csv(scan_id: int, db: Session = Depends(get_db), user: CurrentUs
     results = db.query(TestResult).filter(TestResult.scan_id == scan_id).all()
     output = io.StringIO()
     writer = csv.writer(output)
-    writer.writerow(["Scan ID", "Provider", "Score", "Scenario", "Iteration", "Passed", "Payload Used"])
+    writer.writerow(["Scan ID", "Provider", "Score", "Scenario", "OWASP Category", "Iteration", "Passed", "Payload Used"])
     for r in results:
-        writer.writerow([scan.id, scan.provider, scan.score, r.scenario_name, r.iteration, "PASS" if r.passed else "FAIL", r.payload_used or ""])
+        owasp = SCENARIO_OWASP_MAP.get(r.scenario_name, "Uncategorized")
+        writer.writerow([scan.id, scan.provider, scan.score, r.scenario_name, owasp, r.iteration, "PASS" if r.passed else "FAIL", r.payload_used or ""])
     output.seek(0)
     return StreamingResponse(
         iter([output.getvalue()]),

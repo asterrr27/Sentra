@@ -10,6 +10,10 @@ const SCENARIOS = [
   { label: 'Token\nSmuggling', icon: '📦' },
   { label: 'Context\nWindow\nOverflow', icon: '🌊' },
   { label: 'Tool\nAbuse', icon: '🔧' },
+  { label: 'System\nPrompt\nExtraction', icon: '🤫' },
+  { label: 'Tool\nOutput\nInjection', icon: '📄' },
+  { label: 'Prompt\nBoundary\nProbing', icon: '🔍' },
+  { label: 'Tool\nLoop\nExploit', icon: '♾️' },
 ]
 
 export default function AttackFlow({ cycle = 0, completed = 0 }) {

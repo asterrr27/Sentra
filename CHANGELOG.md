@@ -1,5 +1,27 @@
 # Changelog
 
+## [2.3.0] - 2026-07-05
+### Added
+- 4 new attack scenarios covering 4 additional OWASP LLM Top 10 categories:
+  - `system_prompt_extraction` (LLM02: Sensitive Information Disclosure) — tests if agent reveals system prompt or internal config
+  - `tool_output_injection` (LLM05: Improper Output Handling) — tests if agent treats tool output as untrusted data
+  - `prompt_boundary_probing` (LLM07: System Prompt Leakage) — tests if agent leaks tool schemas/credentials/paths
+  - `tool_loop_exploit` (LLM10: Unbounded Consumption) — tests if agent refuses unbounded action chains
+- Per-scenario OWASP category tagging in:
+  - JSON API responses (`scenario_owasp` field)
+  - JSON export (`owasp_category` per result)
+  - CSV export (OWASP Category column)
+  - PDF report (OWASP tag next to each scenario name)
+  - Frontend Results page (OWASP badge per scenario)
+- OWASP mapping table in README
+
+### Changed
+- Updated from 9 scenarios (2 OWASP categories) to 13 scenarios (6 OWASP categories)
+- Demo agent handles 4 new scenario patterns
+- Demo data mock includes all 13 scenarios across 6 OWASP categories
+- Updated AttackFlow visualization to show 13 nodes
+- Updated Dashboard, Results, Payloads pages with new scenario labels and icons
+
 ## [2.2.0] - 2026-07-05
 ### Security
 - JWT secret now auto-generates a random 48-char value if missing from `.env`; warns on startup

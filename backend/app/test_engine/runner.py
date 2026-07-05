@@ -13,6 +13,10 @@ from app.test_engine.role_play_jailbreak import RolePlayJailbreakTest
 from app.test_engine.token_smuggling import TokenSmugglingTest
 from app.test_engine.context_window_overflow import ContextWindowOverflowTest
 from app.test_engine.tool_abuse import ToolAbuseTest
+from app.test_engine.system_prompt_extraction import SystemPromptExtractionTest
+from app.test_engine.tool_output_injection import ToolOutputInjectionTest
+from app.test_engine.prompt_boundary_probing import PromptBoundaryProbingTest
+from app.test_engine.tool_loop_exploit import ToolLoopExploitTest
 from app.scoring.calculator import calculate_score
 from app.models import Scan, TestResult
 
@@ -26,6 +30,10 @@ SCENARIO_MAP = {
     "token_smuggling": TokenSmugglingTest,
     "context_window_overflow": ContextWindowOverflowTest,
     "tool_abuse": ToolAbuseTest,
+    "system_prompt_extraction": SystemPromptExtractionTest,
+    "tool_output_injection": ToolOutputInjectionTest,
+    "prompt_boundary_probing": PromptBoundaryProbingTest,
+    "tool_loop_exploit": ToolLoopExploitTest,
 }
 
 ALL_SCENARIO_NAMES = list(SCENARIO_MAP.keys())

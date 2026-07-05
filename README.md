@@ -2,14 +2,14 @@
 
 **Secure AI. Build with Confidence.**
 
-Sentra is a modern AI Agent security testing platform. Paste a deployed AI agent URL and simulate 9 real-world attack scenarios to discover vulnerabilities before attackers do.
+Sentra is a modern AI Agent security testing platform. Paste a deployed AI agent URL and simulate 13 real-world attack scenarios spanning 6 OWASP LLM Top 10 categories to discover vulnerabilities before attackers do.
 
 ## Features
 
-- **9 Attack Scenarios** — Goal Deviation, Excessive Agency, Indirect Injection, Permission Boundary, Multi-Step Chain, Role-Play Jailbreak, Token Smuggling, Context Window Overflow, Tool Abuse
+- **13 Attack Scenarios** — Covering 6 OWASP categories: LLM01 (Prompt Injection), LLM02 (Sensitive Information Disclosure), LLM05 (Improper Output Handling), LLM06 (Excessive Agency), LLM07 (System Prompt Leakage), LLM10 (Unbounded Consumption)
 - **Demo Agent** — Built-in sandboxed agent with 3 tools (read file, send email, search web) for instant testing
 - **Custom Agent Testing** — Test your own deployed agent via webhook
-- **OWASP-Aligned Scoring** — 0–100 security score with breakdown by OWASP categories (LLM01, LLM06)
+- **OWASP-Aligned Scoring** — 0–100 security score with breakdown by OWASP categories with per-scenario tagging
 - **Export** — Download scan reports as PDF, CSV, or JSON
 - **Scan Comparison** — Compare two scans side by side to track regressions
 - **Authentication** — JWT-based login/registration with admin panel and password reset
@@ -74,6 +74,19 @@ docker compose exec sentra python -m pytest backend/tests/ -v
 # Frontend
 cd frontend && npm test
 ```
+
+## OWASP LLM Top 10 Mapping
+
+Each attack scenario is mapped to its corresponding OWASP category based on the actual behavior being tested:
+
+| OWASP Category | Scenarios |
+|----------------|-----------|
+| **LLM01: Prompt Injection** | Goal Deviation, Indirect Injection, Multi-Step Chain, Role-Play Jailbreak, Token Smuggling, Context Window Overflow |
+| **LLM02: Sensitive Information Disclosure** | System Prompt Extraction |
+| **LLM05: Improper Output Handling** | Tool Output Injection |
+| **LLM06: Excessive Agency** | Excessive Agency, Permission Boundary, Tool Abuse |
+| **LLM07: System Prompt Leakage** | Prompt Boundary Probing |
+| **LLM10: Unbounded Consumption** | Tool Loop Exploit |
 
 ## Tech Stack
 

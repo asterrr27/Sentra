@@ -2,6 +2,7 @@ import io
 from datetime import datetime
 
 from app.models import Scan, TestResult
+from app.scoring.calculator import SCENARIO_OWASP_MAP
 
 
 def generate_pdf(scan: Scan, results: list[TestResult]) -> bytes:
@@ -172,9 +173,11 @@ def generate_pdf(scan: Scan, results: list[TestResult]) -> bytes:
                 pct = round(passed / total * 100) if total else 0
                 pct_color = "#22C55E" if pct >= 80 else "#F59E0B" if pct >= 50 else "#EF4444"
 
+                owasp_tag = SCENARIO_OWASP_MAP.get(sname, "Uncategorized")
                 elements.append(Paragraph(
                     f"<b>{sname.replace('_', ' ').title()}</b>  &nbsp;"
-                    f"<font color='{pct_color}'>({passed}/{total} passed, {pct}%)</font>",
+                    f"<font color='{pct_color}'>({passed}/{total} passed, {pct}%)</font>  &nbsp;"
+                    f"<font color='#64748B'>[{owasp_tag}]</font>",
                     subheading_style,
                 ))
                 elements.append(Spacer(1, 3))
