@@ -28,6 +28,12 @@ docker compose up --build
 
 Visit `http://localhost:8000`
 
+## Screenshots
+
+| Dashboard | Results | PDF Export |
+|---|---|---|
+| ![Dashboard](screenshots/dashboard.png) | ![Results](screenshots/results.png) | ![PDF Export](screenshots/pdf-report.png) |
+
 ## CLI Usage
 
 Run a scan against the demo agent:
@@ -67,6 +73,20 @@ sentra/
 └── docker-compose.yml
 ```
 
+## Configuration
+
+Copy `backend/.env.example` to `backend/.env` and adjust:
+
+| Variable | Required | Default | Description |
+|---|---|---|---|
+| `DATABASE_URL` | No | `sqlite:///./agent_auditor.db` | SQLAlchemy database URL |
+| `JWT_SECRET` | Yes (prod) | auto-generated (warning) | 32+ character random secret for JWT signing |
+| `OPENAI_API_KEY` | No | — | OpenAI API key (omit for demo/mock mode) |
+| `OPENAI_MODEL` | No | `gpt-4o-mini` | OpenAI model name |
+| `RATE_LIMIT` | No | `10/minute` | Request rate limit string (slowapi format) |
+| `CORS_ORIGINS` | No | `http://localhost:5173,http://localhost:8000` | Comma-separated allowed CORS origins |
+| `CUSTOM_AGENT_TIMEOUT` | No | `15` | Webhook request timeout in seconds |
+
 ## Running Tests
 
 ```bash
@@ -95,6 +115,58 @@ Each attack scenario is mapped to its corresponding OWASP category based on the 
 - **Backend:** Python 3.12, FastAPI, SQLAlchemy, SQLite, ReportLab
 - **Frontend:** React 18, Vite, Tailwind CSS, Chart.js, Framer Motion
 - **Infra:** Docker, docker-compose
+
+## API Reference
+
+### Auth (`/api/auth`)
+
+| Method | Path | Description |
+|---|---|---|
+| POST | `/api/auth/register` | Register a new user (rate-limited) |
+| POST | `/api/auth/login` | Login, returns JWT token (rate-limited) |
+| GET | `/api/auth/me` | Get current user profile |
+
+### Scans (`/api/scans`)
+
+| Method | Path | Description |
+|---|---|---|
+| POST | `/api/scans` | Create and launch a new scan (rate-limited) |
+| GET | `/api/scans` | List recent scans (user-scoped) |
+| POST | `/api/scans/{id}/cancel` | Cancel a running scan |
+| GET | `/api/scans/{id}` | Get scan status |
+| GET | `/api/scans/{id}/results` | Get full scan results |
+| GET | `/api/scans/{id}/export` | Download JSON export |
+| GET | `/api/scans/{id}/export/pdf` | Download PDF report |
+| GET | `/api/scans/{id}/export/csv` | Download CSV export |
+
+### Admin (`/api/admin`)
+
+| Method | Path | Description |
+|---|---|---|
+| GET | `/api/admin/users` | List all users (rate-limited) |
+| GET | `/api/admin/stats` | System statistics (rate-limited) |
+| POST | `/api/admin/users/{id}/reset-password` | Reset user password (rate-limited) |
+
+### Other
+
+| Method | Path | Description |
+|---|---|---|
+| GET | `/api/payloads` | List all test payloads |
+
+### CLI
+
+Run scans from CI/CD without a browser:
+
+```bash
+# Run all 13 scenarios against the demo agent
+python -m app.cli --agent-type demo --iterations 5
+
+# Run against your own agent
+python -m app.cli --agent-type custom --webhook-url https://your-agent.example.com --iterations 5
+
+# Fail CI if score is below 70
+python -m app.cli --agent-type demo --iterations 5 --threshold 70
+```
 
 ## License
 
