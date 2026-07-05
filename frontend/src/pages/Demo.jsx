@@ -8,35 +8,47 @@ import { useNavigate } from 'react-router-dom'
 const DEMO_LINES = [
   { text: 'Connecting to demo security engine...', type: 'info' },
   { text: 'Initializing attack simulation environment...', type: 'info' },
-  { text: 'Launching Goal Deviation attack (1/9)...', type: 'info' },
+  { text: 'Launching Goal Deviation attack (1/13)...', type: 'info' },
   { text: 'Testing prompt override resistance...', type: 'info' },
   { text: 'Goal Deviation: 4/5 tests passed', type: 'pass' },
-  { text: 'Launching Excessive Agency attack (2/9)...', type: 'info' },
+  { text: 'Launching Excessive Agency attack (2/13)...', type: 'info' },
   { text: 'Testing autonomous tool execution boundaries...', type: 'info' },
   { text: 'Excessive Agency: 4/5 tests passed', type: 'pass' },
-  { text: 'Launching Indirect Injection attack (3/9)...', type: 'info' },
+  { text: 'Launching Indirect Injection attack (3/13)...', type: 'info' },
   { text: 'Testing tool output poisoning resistance...', type: 'info' },
   { text: 'Indirect Injection: 3/5 tests passed', type: 'pass' },
-  { text: 'Launching Permission Boundary attack (4/9)...', type: 'info' },
+  { text: 'Launching Permission Boundary attack (4/13)...', type: 'info' },
   { text: 'Testing path traversal and boundary enforcement...', type: 'info' },
   { text: 'Permission Boundary: 4/5 tests passed', type: 'pass' },
-  { text: 'Launching Multi-step Chain attack (5/9)...', type: 'info' },
+  { text: 'Launching Multi-step Chain attack (5/13)...', type: 'info' },
   { text: 'Testing multi-step manipulation chains...', type: 'info' },
   { text: 'Multi-step Chain: 4/5 tests passed', type: 'pass' },
-  { text: 'Launching Role-play Jailbreak attack (6/9)...', type: 'info' },
+  { text: 'Launching Role-play Jailbreak attack (6/13)...', type: 'info' },
   { text: 'Testing role-based safety override resistance...', type: 'info' },
   { text: 'Role-play Jailbreak: 4/5 tests passed', type: 'pass' },
-  { text: 'Launching Token Smuggling attack (7/9)...', type: 'info' },
+  { text: 'Launching Token Smuggling attack (7/13)...', type: 'info' },
   { text: 'Testing encoded instruction detection...', type: 'info' },
   { text: 'Token Smuggling: 3/5 tests passed', type: 'pass' },
-  { text: 'Launching Context Window Overflow attack (8/9)...', type: 'info' },
+  { text: 'Launching Context Window Overflow attack (8/13)...', type: 'info' },
   { text: 'Testing context boundary enforcement...', type: 'info' },
   { text: 'Context Window Overflow: 4/5 tests passed', type: 'pass' },
-  { text: 'Launching Tool Abuse attack (9/9)...', type: 'info' },
+  { text: 'Launching Tool Abuse attack (9/13)...', type: 'info' },
   { text: 'Testing tool parameter constraint enforcement...', type: 'info' },
   { text: 'Tool Abuse: 4/5 tests passed', type: 'pass' },
+  { text: 'Launching System Prompt Extraction attack (10/13)...', type: 'info' },
+  { text: 'Testing system prompt disclosure resistance...', type: 'info' },
+  { text: 'System Prompt Extraction: 4/5 tests passed', type: 'pass' },
+  { text: 'Launching Tool Output Injection attack (11/13)...', type: 'info' },
+  { text: 'Testing untrusted tool output handling...', type: 'info' },
+  { text: 'Tool Output Injection: 3/5 tests passed', type: 'pass' },
+  { text: 'Launching Prompt Boundary Probing attack (12/13)...', type: 'info' },
+  { text: 'Testing config and schema leakage resistance...', type: 'info' },
+  { text: 'Prompt Boundary Probing: 4/5 tests passed', type: 'pass' },
+  { text: 'Launching Tool Loop Exploit attack (13/13)...', type: 'info' },
+  { text: 'Testing unbounded action chain resistance...', type: 'info' },
+  { text: 'Tool Loop Exploit: 2/5 tests passed', type: 'pass' },
   { text: 'Collecting metrics and generating report...', type: 'info' },
-  { text: 'Audit completed. Security score: 84/100', type: 'pass' },
+  { text: 'Audit completed. Security score: 76/100', type: 'pass' },
   { text: 'Redirecting to results...', type: 'info' },
 ]
 
@@ -62,7 +74,7 @@ export default function Demo() {
       if (i < DEMO_LINES.length) {
         setLines(prev => [...prev, DEMO_LINES[i]])
         if (DEMO_LINES[i].type === 'pass') {
-          setCompleted(prev => Math.min(prev + 1, 9))
+          setCompleted(prev => Math.min(prev + 1, 13))
         }
         setProgress(Math.min(100, Math.round(((i + 1) / DEMO_LINES.length) * 100)))
         indexRef.current = i + 1
