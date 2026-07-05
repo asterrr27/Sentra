@@ -1,5 +1,6 @@
 import csv
 import io
+from datetime import datetime
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks, Request
@@ -17,6 +18,7 @@ from app.agents import get_connector
 from app.auth import get_current_user, CurrentUser
 from app.report_generator import generate_pdf
 from app.scoring.calculator import SCENARIO_OWASP_MAP
+from app.reporting.vulnerability_data import SCENARIO_METADATA
 from app.test_engine.runner import ScanRunner, ALL_SCENARIO_NAMES
 
 router = APIRouter(prefix="/api/scans", tags=["scans"])
@@ -158,27 +160,74 @@ def export_scan(scan_id: int, db: Session = Depends(get_db), user: CurrentUser =
     if not scan:
         raise HTTPException(404, "Scan not found")
     results = db.query(TestResult).filter(TestResult.scan_id == scan_id).all()
+    total_tests = len(results)
+    total_passed = sum(1 for r in results if r.passed)
+    total_failed = total_tests - total_passed
+    pass_rate = round(total_passed / total_tests * 100, 1) if total_tests else 0
+    scenario_groups = {}
+    for r in results:
+        scenario_groups.setdefault(r.scenario_name, []).append(r)
+    owasp_categories = set(SCENARIO_OWASP_MAP.get(s, "") for s in scenario_groups)
+
+    scenarios_out = []
+    for sname, sresults in scenario_groups.items():
+        passed = sum(1 for r in sresults if r.passed)
+        total = len(sresults)
+        meta = SCENARIO_METADATA.get(sname, {})
+        scenarios_out.append({
+            "name": sname,
+            "label": meta.get("label", sname.replace("_", " ").title()),
+            "owasp_category": meta.get("owasp_category", SCENARIO_OWASP_MAP.get(sname, "")),
+            "severity": meta.get("severity_label", "Medium"),
+            "severity_weight": meta.get("severity_weight", 1.0),
+            "passed": passed,
+            "total": total,
+            "pass_rate": round(passed / total * 100, 1) if total else 0,
+            "vulnerability": {
+                "description": meta.get("description", ""),
+                "mitigation": meta.get("mitigation", ""),
+            } if passed < total else None,
+            "iterations": [
+                {
+                    "iteration": r.iteration,
+                    "passed": bool(r.passed),
+                    "payload_used": r.payload_used or "",
+                }
+                for r in sresults
+            ],
+        })
+
+    risk_level = "Low Risk" if scan.score is not None and scan.score >= 80 else "Moderate Risk" if scan.score is not None and scan.score >= 50 else "High Risk"
+
     data = {
-        "scan": {
-            "id": scan.id,
+        "report_metadata": {
+            "tool": "Sentra",
+            "version": "2.3.0",
+            "exported_at": datetime.utcnow().isoformat() + "Z",
+            "scan_id": scan.id,
+        },
+        "summary": {
+            "score": scan.score,
+            "risk_level": risk_level if scan.score is not None else None,
+            "total_tests": total_tests,
+            "passed": total_passed,
+            "failed": total_failed,
+            "pass_rate": pass_rate,
+            "scenarios_tested": len(scenario_groups),
+            "owasp_categories_covered": len(owasp_categories),
+            "owasp_breakdown": scan.owasp_breakdown or {},
+        },
+        "scenarios": scenarios_out,
+        "agent": {
             "provider": scan.provider,
             "agent_type": scan.agent_type,
-            "status": scan.status,
-            "score": scan.score,
-            "owasp_breakdown": scan.owasp_breakdown,
             "iterations": scan.iterations,
-            "created_at": scan.created_at.isoformat() if scan.created_at else None,
+            "system_prompt": scan.system_prompt,
         },
-        "results": [
-            {
-                "scenario": r.scenario_name,
-                "owasp_category": SCENARIO_OWASP_MAP.get(r.scenario_name, "Uncategorized"),
-                "iteration": r.iteration,
-                "passed": bool(r.passed),
-                "payload_used": r.payload_used,
-            }
-            for r in results
-        ],
+        "metadata": {
+            "created_at": scan.created_at.isoformat() if scan.created_at else None,
+            "exported_at": datetime.utcnow().isoformat() + "Z",
+        },
     }
     return JSONResponse(
         content=data,
@@ -208,10 +257,54 @@ def export_scan_csv(scan_id: int, db: Session = Depends(get_db), user: CurrentUs
     results = db.query(TestResult).filter(TestResult.scan_id == scan_id).all()
     output = io.StringIO()
     writer = csv.writer(output)
-    writer.writerow(["Scan ID", "Provider", "Score", "Scenario", "OWASP Category", "Iteration", "Passed", "Payload Used"])
+
+    risk_level = "Low Risk" if scan.score is not None and scan.score >= 80 else "Moderate Risk" if scan.score is not None and scan.score >= 50 else "High Risk"
+    now = datetime.utcnow().strftime("%Y-%m-%d %H:%M UTC")
+    created = scan.created_at.strftime("%Y-%m-%d %H:%M UTC") if scan.created_at else ""
+
+    writer.writerow(["SCAN METADATA"])
+    writer.writerow(["Scan ID", "Provider", "Score", "Risk Level", "Iterations", "Agent Type", "Date"])
+    writer.writerow([scan.id, scan.provider or "", scan.score or "", risk_level if scan.score is not None else "", scan.iterations, scan.agent_type or "", created])
+    writer.writerow([])
+
+    scenario_groups = {}
     for r in results:
-        owasp = SCENARIO_OWASP_MAP.get(r.scenario_name, "Uncategorized")
-        writer.writerow([scan.id, scan.provider, scan.score, r.scenario_name, owasp, r.iteration, "PASS" if r.passed else "FAIL", r.payload_used or ""])
+        scenario_groups.setdefault(r.scenario_name, []).append(r)
+
+    writer.writerow(["SCENARIO SUMMARY"])
+    writer.writerow(["Scenario", "OWASP Category", "Severity", "Passed", "Total", "Pass Rate"])
+    for sname, sresults in scenario_groups.items():
+        passed = sum(1 for r in sresults if r.passed)
+        total = len(sresults)
+        pct = round(passed / total * 100, 1) if total else 0
+        meta = SCENARIO_METADATA.get(sname, {})
+        writer.writerow([
+            meta.get("label", sname),
+            meta.get("owasp_category", ""),
+            meta.get("severity_label", "Medium"),
+            passed,
+            total,
+            f"{pct}%",
+        ])
+    writer.writerow([])
+
+    writer.writerow(["DETAILED RESULTS"])
+    writer.writerow(["Scenario", "Label", "OWASP Category", "Iteration", "Result", "Payload Used", "Mitigation"])
+    for r in results:
+        meta = SCENARIO_METADATA.get(r.scenario_name, {})
+        writer.writerow([
+            r.scenario_name,
+            meta.get("label", ""),
+            meta.get("owasp_category", SCENARIO_OWASP_MAP.get(r.scenario_name, "")),
+            r.iteration,
+            "PASS" if r.passed else "FAIL",
+            r.payload_used or "",
+            meta.get("mitigation", "") if not r.passed else "",
+        ])
+    writer.writerow([])
+    writer.writerow([f"Exported: {now}"])
+    writer.writerow(["Tool: Sentra v2.3.0"])
+
     output.seek(0)
     return StreamingResponse(
         iter([output.getvalue()]),
