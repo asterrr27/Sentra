@@ -1,5 +1,34 @@
 # Changelog
 
+## [2.4.0] - 2026-07-05
+### Added
+- Professional PDF report layout with cover page, donut gauge, executive summary, OWASP bar chart
+- Per-scenario vulnerability findings with descriptions and mitigations in PDF
+- `reporting/vulnerability_data.py` — metadata (labels, OWASP tags, severity, descriptions, mitigations) for all 13 scenarios
+- User isolation: scans are owned per user (`user_id` FK on Scan model); admins see all, users see only their own
+- SSRF protection in webhook connector (blocks internal IPv4 ranges: localhost, 10.x, 172.16-31.x, 192.168.x)
+- Rate limiting on register, admin/users, admin/stats, and admin/reset-password endpoints
+- Username character validation (alphanumeric + dots/hyphens/underscores only)
+- Logging to all agent connectors (OpenAI, Anthropic, webhook)
+
+### Changed
+- PDF text colors fixed from light gray (invisible on white paper) to dark slate
+- JSON export restructured with grouped OWASP categories + per-scenario results
+- CSV export restructured with metadata header, summary table, and detailed results
+- Admin password reset minimum length increased from 4 to 8 characters
+- `datetime.utcnow()` replaced with `datetime.now(timezone.utc)` throughout
+
+### Fixed
+- **Critical:** JWT secret now validated at startup (must be >= 32 chars)
+- **Critical:** Auth header no longer forwarded to arbitrary webhook URLs (credential leak)
+- **Critical:** cancelledRef not reset on Results page re-mount (scan data appeared stuck on navigation)
+- **Critical:** Logo SVG used hardcoded `#logo-gradient` ID instead of dynamic `useId()`
+- Error messages in OpenAI, Anthropic, and webhook connectors sanitized (no leaked API keys or stack traces)
+- Stack trace leaked in scan error messages — now capped at 500 chars
+- `fetchError` not cleared on successful scan list load in Dashboard
+- `deriveVulnerabilities` called twice per render — wrapped in `useMemo`
+- Em-dash encoding issue in PDF generation
+
 ## [2.3.0] - 2026-07-05
 ### Added
 - 4 new attack scenarios covering 4 additional OWASP LLM Top 10 categories:

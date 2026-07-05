@@ -10,11 +10,14 @@ Sentra is a modern AI Agent security testing platform. Paste a deployed AI agent
 - **Demo Agent** — Built-in sandboxed agent with 3 tools (read file, send email, search web) for instant testing
 - **Custom Agent Testing** — Test your own deployed agent via webhook
 - **OWASP-Aligned Scoring** — 0–100 security score with breakdown by OWASP categories with per-scenario tagging
-- **Export** — Download scan reports as PDF, CSV, or JSON
+- **Export** — Professional PDF reports (cover page, donut gauge, OWASP bar charts, executive summary, per-scenario findings with mitigations), CSV, or JSON
 - **Scan Comparison** — Compare two scans side by side to track regressions
 - **Authentication** — JWT-based login/registration with admin panel and password reset
+- **User Isolation** — Scans are owned per user; admins can see all, users see only their own
+- **SSRF Protection** — Webhook connector blocks requests to internal network ranges
+- **Sanitized Errors** — Error messages never leak API keys or stack traces
 - **CLI Mode** — Run scans from CI/CD pipelines
-- **Rate Limiting** — Built-in API rate limiting with slowapi
+- **Rate Limiting** — Built-in API rate limiting with slowapi on auth and admin endpoints
 - **Tests** — Backend unit tests (pytest) and frontend component tests (vitest)
 
 ## Quick Start
@@ -24,8 +27,6 @@ docker compose up --build
 ```
 
 Visit `http://localhost:8000`
-
-Default credentials: `admin` / `admin123`
 
 ## CLI Usage
 
@@ -49,11 +50,12 @@ sentra/
 │   ├── app/
 │   │   ├── agents/          # Demo and custom agent connectors
 │   │   ├── routers/         # API endpoints (auth, scans, admin)
+│   │   ├── reporting/       # Vulnerability data & OWASP metadata
 │   │   ├── scoring/         # Scoring and OWASP breakdown
-│   │   ├── test_engine/     # 9 attack scenario implementations
+│   │   ├── test_engine/     # 13 attack scenario implementations
 │   │   ├── models.py        # SQLAlchemy models
 │   │   ├── auth.py          # JWT authentication
-│   │   └── report_generator.py  # PDF report generation
+│   │   └── report_generator.py  # Professional PDF reports with OWASP charts
 │   ├── tests/               # Backend tests (pytest)
 │   └── Dockerfile
 ├── frontend/
