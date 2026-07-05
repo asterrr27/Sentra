@@ -1,6 +1,6 @@
 import io
 import math
-from datetime import datetime
+from datetime import datetime, timezone
 
 from app.models import Scan, TestResult
 from app.scoring.calculator import SCENARIO_OWASP_MAP
@@ -155,7 +155,7 @@ def generate_pdf(scan: Scan, results: list[TestResult]) -> bytes:
             [Paragraph("<b>Scan ID</b>", s_small), Paragraph(f"#{scan.id}", s_small)],
             [Paragraph("<b>Agent</b>", s_small), Paragraph(f"{scan.provider or scan.agent_type}", s_small)],
             [Paragraph("<b>Iterations</b>", s_small), Paragraph(str(scan.iterations), s_small)],
-            [Paragraph("<b>Date</b>", s_small), Paragraph(datetime.utcnow().strftime("%Y-%m-%d %H:%M UTC"), s_small)],
+            [Paragraph("<b>Date</b>", s_small), Paragraph(datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC"), s_small)],
         ]
         ci_table = Table(cover_info, colWidths=[1.2 * inch, 2.5 * inch])
         ci_table.setStyle(TableStyle([
@@ -381,7 +381,7 @@ def generate_pdf(scan: Scan, results: list[TestResult]) -> bytes:
             ["Iterations", str(scan.iterations)],
             ["Total Tests", str(total_tests)],
             ["Created", scan.created_at.strftime("%Y-%m-%d %H:%M UTC") if scan.created_at else "-"],
-            ["Report Generated", datetime.utcnow().strftime("%Y-%m-%d %H:%M UTC")],
+            ["Report Generated", datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")],
         ]
         if scan.system_prompt:
             config_items.append(["System Prompt", scan.system_prompt])

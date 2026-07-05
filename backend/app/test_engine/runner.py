@@ -111,5 +111,6 @@ class ScanRunner:
             self.db.commit()
         except Exception as e:
             self.scan.status = "failed"
-            self.scan.error_message = str(e)
+            self.scan.error_message = str(e)[:500]
             self.db.commit()
+            logging.getLogger(__name__).error(f"Scan {self.scan.id} failed: {e}", exc_info=True)

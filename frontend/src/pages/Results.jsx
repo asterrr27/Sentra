@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useMemo } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import PageTransition from '../components/layout/PageTransition'
@@ -187,6 +187,7 @@ export default function Results() {
   }, [id])
 
   useEffect(() => {
+    cancelledRef.current = false
     if (id === 'demo') {
       import('../utils/demoData').then(m => { setData(m.DEMO_RESULTS); setLoading(false) }).catch(() => { setData(null); setLoading(false) })
       return
@@ -234,6 +235,8 @@ export default function Results() {
       if (timer) clearTimeout(timer)
     }
   }, [id])
+
+  const vulnerabilities = useMemo(() => data?.scenarios ? deriveVulnerabilities(data.scenarios) : [], [data])
 
   if (loading && loadingTimedOut) {
     return (
@@ -474,12 +477,12 @@ export default function Results() {
         >
           <h3 className="text-base font-bold mb-4">Vulnerabilities</h3>
           <div className="space-y-3">
-            {deriveVulnerabilities(data.scenarios).length === 0 ? (
+            {vulnerabilities.length === 0 ? (
               <div className="glass-card p-6 text-center">
                 <div className="text-2xl mb-2">🛡️</div>
                 <p className="text-sm text-white/50">No vulnerabilities detected across all scenarios.</p>
               </div>
-            ) : deriveVulnerabilities(data.scenarios).map(v => (
+            ) : vulnerabilities.map(v => (
               <VulnerabilityCard key={v.name} {...v} />
             ))}
           </div>

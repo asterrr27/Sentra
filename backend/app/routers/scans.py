@@ -1,5 +1,6 @@
 import csv
 import io
+import logging
 from datetime import datetime
 from typing import Optional
 
@@ -21,7 +22,18 @@ from app.scoring.calculator import SCENARIO_OWASP_MAP
 from app.reporting.vulnerability_data import SCENARIO_METADATA
 from app.test_engine.runner import ScanRunner, ALL_SCENARIO_NAMES
 
+logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/scans", tags=["scans"])
+
+
+def _get_user_scan(scan_id: int, user: CurrentUser, db: Session) -> Scan:
+    q = db.query(Scan).filter(Scan.id == scan_id)
+    if user.role != "admin":
+        q = q.filter(Scan.user_id == user.id)
+    scan = q.first()
+    if not scan:
+        raise HTTPException(404, "Scan not found")
+    return scan
 
 
 def run_scan_in_background(scan_id: int, connector, scenario_names: Optional[list[str]]):
@@ -29,6 +41,7 @@ def run_scan_in_background(scan_id: int, connector, scenario_names: Optional[lis
     try:
         scan = db.query(Scan).filter(Scan.id == scan_id).first()
         if not scan:
+            logger.warning(f"Background task: Scan {scan_id} not found, skipping")
             return
         runner = ScanRunner(db, scan, connector, scenario_names)
         runner.run()
@@ -37,6 +50,7 @@ def run_scan_in_background(scan_id: int, connector, scenario_names: Optional[lis
         if scan:
             scan.status = "failed"
             db.commit()
+            logger.error(f"Background task: Scan {scan_id} failed", exc_info=True)
     finally:
         db.close()
 
@@ -58,6 +72,7 @@ def create_scan(request: Request, req: ScanRequest, background_tasks: Background
     })
 
     scan = Scan(
+        user_id=user.id,
         provider=req.provider,
         model_name=req.model,
         webhook_url=req.webhook_url,
@@ -81,7 +96,10 @@ def create_scan(request: Request, req: ScanRequest, background_tasks: Background
 
 @router.get("", response_model=list[ScanStatus])
 def list_scans(db: Session = Depends(get_db), user: CurrentUser = Depends(get_current_user)):
-    scans = db.query(Scan).order_by(Scan.created_at.desc()).limit(20).all()
+    q = db.query(Scan)
+    if user.role != "admin":
+        q = q.filter(Scan.user_id == user.id)
+    scans = q.order_by(Scan.created_at.desc()).limit(20).all()
     return [
         ScanStatus(
             scan_id=s.id,
@@ -96,9 +114,7 @@ def list_scans(db: Session = Depends(get_db), user: CurrentUser = Depends(get_cu
 
 @router.post("/{scan_id}/cancel")
 def cancel_scan(scan_id: int, db: Session = Depends(get_db), user: CurrentUser = Depends(get_current_user)):
-    scan = db.query(Scan).filter(Scan.id == scan_id).first()
-    if not scan:
-        raise HTTPException(404, "Scan not found")
+    scan = _get_user_scan(scan_id, user, db)
     if scan.status not in ("queued", "running"):
         raise HTTPException(400, f"Scan is '{scan.status}', cannot cancel")
     scan.status = "cancelled"
@@ -108,9 +124,7 @@ def cancel_scan(scan_id: int, db: Session = Depends(get_db), user: CurrentUser =
 
 @router.get("/{scan_id}", response_model=ScanStatus)
 def get_scan_status(scan_id: int, db: Session = Depends(get_db), user: CurrentUser = Depends(get_current_user)):
-    scan = db.query(Scan).filter(Scan.id == scan_id).first()
-    if not scan:
-        raise HTTPException(404, "Scan not found")
+    scan = _get_user_scan(scan_id, user, db)
     total = db.query(TestResult).filter(TestResult.scan_id == scan_id).count()
     return ScanStatus(
         scan_id=scan.id,
@@ -123,9 +137,7 @@ def get_scan_status(scan_id: int, db: Session = Depends(get_db), user: CurrentUs
 
 @router.get("/{scan_id}/results")
 def get_scan_results(scan_id: int, db: Session = Depends(get_db), user: CurrentUser = Depends(get_current_user)):
-    scan = db.query(Scan).filter(Scan.id == scan_id).first()
-    if not scan:
-        raise HTTPException(404, "Scan not found")
+    scan = _get_user_scan(scan_id, user, db)
     results = db.query(TestResult).filter(TestResult.scan_id == scan_id).all()
     scenarios = {}
     for r in results:
@@ -156,9 +168,7 @@ def get_scan_results(scan_id: int, db: Session = Depends(get_db), user: CurrentU
 
 @router.get("/{scan_id}/export")
 def export_scan(scan_id: int, db: Session = Depends(get_db), user: CurrentUser = Depends(get_current_user)):
-    scan = db.query(Scan).filter(Scan.id == scan_id).first()
-    if not scan:
-        raise HTTPException(404, "Scan not found")
+    scan = _get_user_scan(scan_id, user, db)
     results = db.query(TestResult).filter(TestResult.scan_id == scan_id).all()
     total_tests = len(results)
     total_passed = sum(1 for r in results if r.passed)
@@ -237,9 +247,7 @@ def export_scan(scan_id: int, db: Session = Depends(get_db), user: CurrentUser =
 
 @router.get("/{scan_id}/export/pdf")
 def export_scan_pdf(scan_id: int, db: Session = Depends(get_db), user: CurrentUser = Depends(get_current_user)):
-    scan = db.query(Scan).filter(Scan.id == scan_id).first()
-    if not scan:
-        raise HTTPException(404, "Scan not found")
+    scan = _get_user_scan(scan_id, user, db)
     results = db.query(TestResult).filter(TestResult.scan_id == scan_id).all()
     pdf_bytes = generate_pdf(scan, results)
     return Response(
@@ -251,9 +259,7 @@ def export_scan_pdf(scan_id: int, db: Session = Depends(get_db), user: CurrentUs
 
 @router.get("/{scan_id}/export/csv")
 def export_scan_csv(scan_id: int, db: Session = Depends(get_db), user: CurrentUser = Depends(get_current_user)):
-    scan = db.query(Scan).filter(Scan.id == scan_id).first()
-    if not scan:
-        raise HTTPException(404, "Scan not found")
+    scan = _get_user_scan(scan_id, user, db)
     results = db.query(TestResult).filter(TestResult.scan_id == scan_id).all()
     output = io.StringIO()
     writer = csv.writer(output)

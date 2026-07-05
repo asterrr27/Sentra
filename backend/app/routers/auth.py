@@ -18,9 +18,12 @@ class RegisterRequest(BaseModel):
 
     @field_validator("username")
     @classmethod
-    def username_length(cls, v):
+    def username_validation(cls, v):
         if len(v) < 3 or len(v) > 50:
             raise ValueError("Username must be between 3 and 50 characters")
+        import re
+        if not re.match(r"^[a-zA-Z0-9_.-]+$", v):
+            raise ValueError("Username must contain only letters, numbers, dots, hyphens, and underscores")
         return v
 
     @field_validator("password")
@@ -50,7 +53,8 @@ class MeResponse(BaseModel):
 
 
 @router.post("/register")
-def register(req: RegisterRequest, db: Session = Depends(get_db)):
+@limiter.limit(settings.RATE_LIMIT)
+def register(request: Request, req: RegisterRequest, db: Session = Depends(get_db)):
     if db.query(User).filter((User.username == req.username) | (User.email == req.email)).first():
         raise HTTPException(400, "Username or email already taken")
     user = User(

@@ -10,6 +10,7 @@ class Scan(Base):
     __tablename__ = "scans"
 
     id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=True, index=True)
     provider = Column(String(20), default="demo")
     model_name = Column(String(100), nullable=True)
     webhook_url = Column(String(500), nullable=True)
@@ -19,10 +20,11 @@ class Scan(Base):
     iterations = Column(Integer, default=5)
     score = Column(Float, nullable=True)
     owasp_breakdown = Column(JSON, nullable=True)
-    status = Column(String(20), default="pending")
+    status = Column(String(20), default="queued")
     error_message = Column(Text, nullable=True)
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
 
+    owner = relationship("User", backref="scans")
     results = relationship("TestResult", back_populates="scan", cascade="all, delete-orphan")
 
 

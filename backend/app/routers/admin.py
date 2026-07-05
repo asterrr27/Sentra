@@ -1,8 +1,10 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
+from app.config import settings
 from app.database import get_db
+from app.limiter import limiter
 from app.models import User, Scan
 from app.auth import hash_password
 from app.auth import get_current_user, CurrentUser
@@ -21,7 +23,8 @@ def require_admin(current_user: CurrentUser = Depends(get_current_user)) -> Curr
 
 
 @router.get("/users")
-def list_users(db: Session = Depends(get_db), _=Depends(require_admin)):
+@limiter.limit("30/minute")
+def list_users(request: Request, db: Session = Depends(get_db), _=Depends(require_admin)):
     users = db.query(User).order_by(User.created_at.desc()).all()
     def mask_email(email: str) -> str:
         at = email.find("@")
@@ -35,7 +38,8 @@ def list_users(db: Session = Depends(get_db), _=Depends(require_admin)):
 
 
 @router.get("/stats")
-def get_stats(db: Session = Depends(get_db), _=Depends(require_admin)):
+@limiter.limit("30/minute")
+def get_stats(request: Request, db: Session = Depends(get_db), _=Depends(require_admin)):
     total_users = db.query(User).count()
     total_scans = db.query(Scan).count()
     completed_scans = db.query(Scan).filter(Scan.status == "completed").count()
@@ -50,9 +54,10 @@ def get_stats(db: Session = Depends(get_db), _=Depends(require_admin)):
 
 
 @router.post("/users/{user_id}/reset-password")
-def reset_password(user_id: int, req: ResetPasswordRequest, db: Session = Depends(get_db), _=Depends(require_admin)):
-    if len(req.new_password) < 4:
-        raise HTTPException(400, "Password must be at least 4 characters")
+@limiter.limit("10/minute")
+def reset_password(request: Request, user_id: int, req: ResetPasswordRequest, db: Session = Depends(get_db), _=Depends(require_admin)):
+    if len(req.new_password) < 8:
+        raise HTTPException(400, "Password must be at least 8 characters")
     user = db.query(User).filter(User.id == user_id).first()
     if not user:
         raise HTTPException(404, "User not found")

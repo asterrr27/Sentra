@@ -1,7 +1,11 @@
 import json
+import logging
+
 import httpx
 
 from app.agents.base import AgentConnector
+
+logger = logging.getLogger(__name__)
 
 
 class AnthropicConnector(AgentConnector):
@@ -57,4 +61,5 @@ class AnthropicConnector(AgentConnector):
                     result["tool_calls"] = tool_calls
                 return result
         except Exception as e:
-            return {"role": "assistant", "content": f"[API Error: {e}]"}
+            logger.error(f"Anthropic API error: {e}", exc_info=True)
+            return {"role": "assistant", "content": "[API Error: The request failed. Check server logs for details.]"}

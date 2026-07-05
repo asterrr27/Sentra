@@ -12,7 +12,7 @@ export default function Logo({ size = 32, withText = false, className = '' }) {
             <stop offset="100%" stopColor="#8B5CF6" />
           </linearGradient>
         </defs>
-        <rect width="32" height="32" rx="8" fill="#09090B" stroke="url(#logo-gradient)" strokeWidth="1.5" />
+        <rect width="32" height="32" rx="8" fill="#09090B" stroke={`url(#${gradientId})`} strokeWidth="1.5" />
         <motion.path
           d="M 16 5 L 27 10 L 27 19 L 16 26 L 5 19 L 5 10 Z"
           stroke={`url(#${gradientId})`}

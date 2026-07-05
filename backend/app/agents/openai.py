@@ -1,6 +1,10 @@
+import logging
+
 import httpx
 
 from app.agents.base import AgentConnector
+
+logger = logging.getLogger(__name__)
 
 
 class OpenAIConnector(AgentConnector):
@@ -40,4 +44,5 @@ class OpenAIConnector(AgentConnector):
                 resp.raise_for_status()
                 return resp.json()["choices"][0]["message"]
         except Exception as e:
-            return {"role": "assistant", "content": f"[API Error: {e}]"}
+            logger.error(f"OpenAI API error: {e}", exc_info=True)
+            return {"role": "assistant", "content": "[API Error: The request failed. Check server logs for details.]"}

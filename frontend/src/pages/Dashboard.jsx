@@ -72,7 +72,7 @@ export default function Dashboard() {
   const pollCycleRef = useRef(0)
 
   useEffect(() => {
-    listScans().then(r => { if (mountedRef.current) setScans(r) }).catch(() => { if (mountedRef.current) setFetchError('Failed to load scan history') })
+    listScans().then(r => { if (mountedRef.current) { setScans(r); setFetchError('') } }).catch(() => { if (mountedRef.current) setFetchError('Failed to load scan history') })
     return () => {
       mountedRef.current = false
       if (pollRef.current) {
@@ -161,11 +161,13 @@ export default function Dashboard() {
   }, [])
 
   const startScan = useCallback(async () => {
+    setFetchError('')
     setScanning(true)
     setTerminalLines([{ text: 'Connecting to security engine...', type: 'info' }])
     setProgress(0)
     setCompletedScenarios(0)
     setCycle(0)
+    lastProgressRef.current = Date.now()
 
     try {
       const data = {

@@ -26,3 +26,8 @@ if not settings.JWT_SECRET:
         "JWT_SECRET not set in .env — using a randomly generated secret. "
         "This will change on every restart, invalidating existing tokens."
     )
+elif len(settings.JWT_SECRET) < 32:
+    raise RuntimeError(
+        "JWT_SECRET must be at least 32 characters long. "
+        "Run: python -c \"import secrets; print(secrets.token_urlsafe(48))\""
+    )
